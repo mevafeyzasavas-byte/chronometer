@@ -13,7 +13,7 @@ body{margin:0;min-height:100svh;display:grid;place-items:center;padding:max(16px
 .card[data-warm="1"]{--acc:var(--warm)}
 .status{margin:0 0 18px;font-size:18px;font-weight:700;letter-spacing:-.01em;min-height:1.4em}
 .dial{position:relative;width:min(300px,100%);aspect-ratio:1;margin:0 auto 24px}
-.dial svg{width:100%;height:100%;transform:rotate(-90deg);display:block}
+.dial svg{width:100%;height:100%;transform:rotate(-90deg);display:block;overflow:visible}
 .track{fill:none;stroke:var(--track);stroke-width:14}
 .bar{fill:none;stroke:var(--acc);stroke-width:14;stroke-linecap:round;transition:stroke-dashoffset .15s linear,stroke .3s}
 .face{position:absolute;inset:26px;border-radius:50%;background:linear-gradient(180deg,#fff,#F7F9FD);box-shadow:inset 0 0 0 1px rgba(29,40,66,.05),0 6px 18px -8px rgba(29,40,66,.18);display:grid;place-content:center;gap:2px}
@@ -29,17 +29,6 @@ body{margin:0;min-height:100svh;display:grid;place-items:center;padding:max(16px
 .chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 .top{display:flex;align-items:center;justify-content:center;margin:0 0 14px}
 .top .pill{margin:0;min-width:0}
-.palbtn{display:none;position:absolute;top:0;right:0;z-index:3;width:38px;height:38px;padding:0;border-radius:50%;background:linear-gradient(135deg,var(--th1),var(--pri));box-shadow:inset 0 0 0 3px #fff,0 0 0 1.5px var(--pri-soft),0 6px 14px -6px var(--pri);transition:transform .12s}
-.palbtn:active{transform:scale(.92)}
-.card[data-phase="idle"] .palbtn{display:block}
-.pal{display:none;position:absolute;top:46px;right:-20px;z-index:10;grid-template-rows:repeat(6,24px);grid-auto-flow:column;gap:6px;padding:7px;border-radius:16px;background:#fff;box-shadow:0 0 0 1px rgba(29,40,66,.06),0 18px 40px -12px rgba(29,40,66,.28)}
-.pal.open{display:grid}
-.card:not([data-phase="idle"]) .pal{display:none}
-.sw{width:24px;height:24px;padding:0;border-radius:50%;background:linear-gradient(135deg,var(--a),var(--b));box-shadow:inset 0 0 0 2px #fff;transition:transform .12s,box-shadow .2s}
-.sw:active{transform:scale(.9)}
-.sw::after{content:"";position:absolute;inset:-4px}
-.sw{position:relative}
-.sw[aria-pressed="true"]{box-shadow:inset 0 0 0 2.5px #fff,0 0 0 2px var(--b)}
 button{font:inherit;cursor:pointer;border:0;color:var(--ink)}
 button:focus-visible{outline:3px solid var(--pri);outline-offset:3px}
 .step{height:52px;border-radius:18px;background:var(--pri-soft);color:var(--pri);font-weight:800;font-size:17px;transition:transform .12s,background .2s}
@@ -91,6 +80,8 @@ button:focus-visible{outline:3px solid var(--pri);outline-offset:3px}
 .tk.on{stroke:var(--acc);opacity:.75}
 .knob{fill:#fff;stroke:var(--acc);stroke-width:3.5;transform-origin:100px 100px;transition:transform .15s linear,opacity .2s;filter:drop-shadow(0 2px 4px rgba(29,40,66,.25))}
 .face{inset:15%;background:radial-gradient(circle at 50% 22%,#fff 0%,#F4F7FC 100%);box-shadow:inset 0 0 0 1px rgba(29,40,66,.05),0 2px 3px rgba(29,40,66,.05),0 22px 40px -18px rgba(29,40,66,.28)}
+.face{cursor:pointer;user-select:none;-webkit-user-select:none;transition:transform .12s}
+.face:active{transform:scale(.98)}
 .time{font-size:clamp(30px,9vw,42px);font-size:14cqw;letter-spacing:-.02em;white-space:nowrap}
 .time i{font-style:normal;opacity:.28}
 .card[data-warm="1"][data-phase="pre"] .time{font-size:clamp(64px,22vw,96px);font-size:34cqw}
@@ -117,9 +108,7 @@ button:focus-visible{outline:3px solid var(--pri);outline-offset:3px}
       <circle class="bar" id="bar" cx="100" cy="100" r="84"/>
       <circle class="knob" id="knob" cx="184" cy="100" r="8.5"/>
     </svg>
-    <button class="palbtn" id="palBtn" aria-label="Renk seç" aria-expanded="false" aria-controls="swatches"></button>
-      <div class="pal" id="swatches" role="group" aria-label="Renk seç"></div>
-      <div class="face">
+          <div class="face" id="face" role="button" tabindex="0" aria-label="Rengi değiştir">
       <div class="time" id="time" role="timer">00:15:00</div>
       <div class="sub" id="sub"></div>
     </div>
@@ -290,7 +279,7 @@ function pick(){
   }
   return bag.pop();
 }
-const QUOTES=["Zor olan başlamaktır, başladıktan sonra gerisi sadece bir ritim meselesidir.", "Gelecek, bugün ne yaptığına bağlı olarak şekillenir.", "Ertelediğin her dakika, hayallerinden çaldığın bir dakikadır.", "Canın istemediğinde bile o masaya oturmak, sıradan olmakla sıra dışı olmak arasındaki farktır.", "Şimdi zorlanmak, ileride pişman olmaktan çok daha iyidir.", "Yarın 'keşke' dememek için bugün 'iyi ki' diyeceğin şeyler yap.", "Motivasyon sadece başlamanı sağlar, seni hedefe ulaştıracak olan ise disiplindir.", "Büyük başarılar, her gün atılan küçük ve istikrarlı adımların toplamıdır.", "Rüzgarın yönünü değiştiremezsin ama yelkenlerini hedefine göre ayarlayabilirsin.", "Bugün gösterdiğin sabır ve disiplin, yarın en büyük özgürlüğün olacak.", "Zeka seni öne geçirebilir ama seni zirvede tutacak olan tek şey düzenli çalışmaktır.", "Yorulunca bırakma, sadece dinlenmeyi öğren ama asla vazgeçme.", "Hiçbir büyük ödül, kolay bir yolculuğun sonunda verilmemiştir.", "Kaybetmek, sadece denemeyi bıraktığında kesinleşir.", "Bulutların arkasındaki güneşi görmek için önce yağmura katlanmak gerekir.", "Bugün çektiğin zorluklar, yarın sahip olacağın gücün hazırlığıdır.", "Kendi sınırlarını zorlamadıkça, potansiyelinin ne kadar büyük olduğunu asla bilemezsin.", "Gözlerini hedeften ayırma; aradaki engeller sadece bakış açını değiştirdiğinde büyür.", "Başkalarının ne kadar hızlı gittiği önemli değil, senin kendi yolunda ilerliyor olman önemlidir.", "Sessizce çalış, bırak başarın senin yerine konuşsun.", "Bir sene sonra bugün, 'keşke daha erken başlasaydım' demek istemiyorsan hemen şimdi kalemi eline al.", "Hayallerine giden yol, önündeki o masadan ve kitaplardan geçiyor.", "Tüm bahanelerini bir kenara bırak; çünkü hiçbir bahane seni hedefine ulaştırmaz.", "Şu an döktüğün alın teri, gelecekte yaşayacağın rahatlığın teminatıdır.", "Zaman akıp gidiyor; onu izlemek yerine ona yön vermeyi seç.", "Masadaki kitaplar yük değil, seni hayallerine taşıyacak basamaklardır.", "Dışarıdaki gürültüyü kapat ve sadece önündeki sayfaya odaklan.", "Zor olan kısmı ders çalışmak değil, masaya oturma kararsızlığıdır.", "Konfor alanından çıkmadıkça büyüme gerçekleşmez; rahatsızlığı kucakla.", "Bugün canın ders çalışmak istemiyorsa, hedeflerini yeterince hatırlamıyorsun demektir.", "Zayıflık hissi geçicidir, yarım bırakmanın yaratacağı pişmanlık ise kalıcı.", "Başarı, canın istemediğinde bile yapman gerekeni yapma becerisidir.", "Yeteneğin bittiği yerde mücadele başlar; pes etmeyen her zaman kazanır.", "Rakiplerinin uyuduğu veya pes ettiği saatler, senin fark yaratacağın anlardır.", "Mükemmel olmak zorunda değilsin, dün olduğundan daha iyi olman yeterli.", "Her yanlış cevap, doğruya giden yolda elenmiş bir seçenektir.", "Öğrenmek bir yük değil, zihnin kazandığı en büyük güçtür.", "Bugün attığın yarım adımlık ilerleme bile, hiç adım atmamaktan iyidir.", "Büyük hedefler, küçük parçalara bölündüğünde kolaylaşır; sadece sıradaki soruya bak."];
+const QUOTES=["Başlamak en zor kısımdır. Başlayınca gerisi kolaylaşır.", "Bugün çalıştığın her şey, yarın seni daha güçlü yapar.", "Ertelediğin her dakika, hayallerinden bir dakika uzaklaşmaktır.", "Canın istemese bile masaya oturursan şampiyon gibi davranmış olursun.", "Şimdi biraz çalış, sonra gururla gülümse.", "Yarın \"keşke\" demek yerine bugün \"iyi ki\" diyeceğin şeyler yap.", "Merak etmek, öğrenmenin ilk adımıdır.", "Her gün atılan küçük adımlar, büyük bir yolculuğa dönüşür.", "Rüzgârı değiştiremezsin ama yelkenini hedefine çevirebilirsin.", "Sabırlı olursan emeğinin karşılığını mutlaka alırsın.", "Zeki olmak güzel ama her gün çalışmak seni en iyi yapar.", "Yorulursan dinlen, ama asla vazgeçme.", "Güzel şeylerin hiçbiri bir günde olmaz.", "Denemeyi bırakmadığın sürece kaybetmiş sayılmazsın.", "Yağmurdan sonra güneş çıkar, zor günler de geçer.", "Bugün zorlandığın şey, yarın en kolay işin olacak.", "Kendini zorlayınca ne kadar güçlü olduğunu görürsün.", "Gözünü hedefinden ayırma, engeller küçülür.", "Başkaları ne kadar hızlı giderse gitsin, sen kendi yolunda ilerle.", "Sessizce çalış, başarın senin yerine konuşsun.", "Bir yıl sonra \"keşke başlasaydım\" demek istemiyorsan hemen şimdi başla.", "Hayallerine giden yol, masandaki kitaplardan geçer.", "Bahaneleri bırak, çünkü bahaneler seni hedefine götürmez.", "Bugünkü emeğin, yarınki başarının tohumudur.", "Zaman akıp gidiyor, onu iyi kullanmayı seç.", "Kitapların yük değil, seni hayallerine çıkaran merdivenlerdir.", "Gürültüyü kapat, sadece önündeki sayfaya bak.", "Zor olan ders çalışmak değil, masaya oturmaya karar vermektir.", "Rahat köşenden çıkmazsan büyüyemezsin.", "Canın çalışmak istemiyorsa hedeflerini bir düşün, sonra başla.", "Tembellik hissi geçer, işi yarım bırakmanın üzüntüsü kalır.", "Başarı, canın istemese de yapman gerekeni yapabilmektir.", "Pes etmeyen her zaman kazanır.", "Kendini dünkü seninle yarıştır, dünden daha iyi olman yeter.", "Her yanlış cevap, doğruya giden yolda bir ipucudur.", "Öğrenmek yük değil, beynine kazandırdığın süper güçtür.", "Yarım adım bile, hiç adım atmamaktan iyidir."];
 let qbag=[],quote="";
 /* Üstteki cümle: şarkılardan bağımsız, sayaç her "hazır" ekrana döndüğünde yenilenir */
 let tbag=[],topQ="";
@@ -384,44 +373,30 @@ function fitQuotes(){
   if($("now").textContent)fitLines($("now"),14,11,2);
 }
 window.addEventListener("resize",fitQuotes);
-/* ---- Renk temaları ---- */
-const THEMES=[
- {n:"Mavi",pri:"#3F5EFB",soft:"#E9EDFF",g1:"#8CA4FF"},
- {n:"Gökyüzü",pri:"#3E9BD8",soft:"#E5F3FC",g1:"#8FCBF0"},
- {n:"Turkuaz",pri:"#25A5B5",soft:"#E0F5F7",g1:"#84D3DC"},
- {n:"Nane",pri:"#3DB48A",soft:"#E3F6EE",g1:"#8EDDBF"},
- {n:"Misket",pri:"#7FAE2F",soft:"#EEF6DD",g1:"#BEDD85"},
- {n:"Bal",pri:"#C98A1B",soft:"#FDF3DF",g1:"#F2CF86"},
- {n:"Gül kurusu",pri:"#C77D8E",soft:"#F8ECEF",g1:"#E5B3BE"},
- {n:"Pembe",pri:"#E0679E",soft:"#FDE9F2",g1:"#F6A9CA"},
- {n:"Şeker",pri:"#D96BC0",soft:"#FBE8F6",g1:"#EEA9DE"},
- {n:"Lila",pri:"#B069D6",soft:"#F6EAFB",g1:"#D9A7EE"},
- {n:"Lavanta",pri:"#8B6FE0",soft:"#F0EBFD",g1:"#BFAEF2"},
- {n:"Bulut",pri:"#6B86A8",soft:"#EAEFF5",g1:"#AFC1D8"}
-];
-const swBox=$("swatches");
-THEMES.forEach((t,i)=>{
-  const b=document.createElement("button");
-  b.className="sw";b.setAttribute("aria-label",t.n);b.setAttribute("aria-pressed","false");
-  b.style.setProperty("--a",t.g1);b.style.setProperty("--b",t.pri);b.dataset.i=i;
-  swBox.appendChild(b);
-});
-function applyTheme(i,save){
-  const t=THEMES[i]||THEMES[0],r=document.documentElement.style;
-  const h=t.pri.slice(1),rgb=[0,2,4].map(k=>parseInt(h.substr(k,2),16)).join(",");
-  r.setProperty("--pri",t.pri);r.setProperty("--pri-soft",t.soft);r.setProperty("--pri-rgb",rgb);
-  r.setProperty("--th1",t.g1);r.setProperty("--th2",t.pri);
-  swBox.querySelectorAll(".sw").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.i===(THEMES[i]?i:0))));
-  if(save){try{localStorage.setItem("theme",String(i))}catch(e){}}
+/* ---- Rastgele renk: saate tıklayınca ---- */
+let hue=-1;
+function hsl2hex(h,sat,l){
+  sat/=100;l/=100;const k=n=>(n+h/30)%12,a=sat*Math.min(l,1-l);
+  const f=n=>Math.round(255*(l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)))));
+  return "#"+[f(0),f(8),f(4)].map(v=>v.toString(16).padStart(2,"0")).join("");
 }
-const palBtn=$("palBtn");
-function palOpen(o){swBox.classList.toggle("open",o);palBtn.setAttribute("aria-expanded",String(o))}
-palBtn.onclick=()=>palOpen(!swBox.classList.contains("open"));
-swBox.onclick=e=>{const b=e.target.closest(".sw");if(b){applyTheme(+b.dataset.i,true);palOpen(false)}};
-document.addEventListener("click",e=>{if(!e.target.closest("#swatches,#palBtn"))palOpen(false)});
-document.addEventListener("keydown",e=>{if(e.key==="Escape")palOpen(false)});
-let savedTheme=0;try{savedTheme=parseInt(localStorage.getItem("theme"),10)||0}catch(e){}
-applyTheme(savedTheme,false);
+function applyHue(h,save){
+  hue=h;const r=document.documentElement.style;
+  const pri=hsl2hex(h,62,56),g1=hsl2hex(h,85,76),soft=hsl2hex(h,100,95);
+  const rgb=[1,3,5].map(k=>parseInt(pri.substr(k,2),16)).join(",");
+  r.setProperty("--pri",pri);r.setProperty("--pri-soft",soft);r.setProperty("--pri-rgb",rgb);
+  r.setProperty("--th1",g1);r.setProperty("--th2",pri);
+  if(save){try{localStorage.setItem("hue",String(h))}catch(e){}}
+}
+function randomTheme(){
+  let h;
+  do{h=Math.floor(Math.random()*360)}while(hue>=0&&Math.min(Math.abs(h-hue),360-Math.abs(h-hue))<40);
+  applyHue(h,true);
+}
+$("face").onclick=randomTheme;
+$("face").addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();randomTheme()}});
+let savedHue=NaN;try{savedHue=parseInt(localStorage.getItem("hue"),10)}catch(e){}
+applyHue(isNaN(savedHue)?228:savedHue,false);
 
 render();draw();updateMusicUI();
 if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(()=>{});
