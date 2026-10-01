@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F4F6FB">
+<title>Süre Sayacı</title>
+<style>
+:root{--bg:#F4F6FB;--card:#FFFFFF;--ink:#1D2842;--mute:#6B7690;--track:#E7EBF4;--pri:#3F5EFB;--pri-soft:#E9EDFF;--warm:#FF7A59;--warm-soft:#FFEEE8;--acc:var(--pri)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;min-height:100svh;display:grid;place-items:center;padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));background:radial-gradient(120% 70% at 50% 0%,#fff 0%,var(--bg) 70%);color:var(--ink);font-family:"Nunito",ui-rounded,"SF Pro Rounded","Segoe UI",system-ui,sans-serif}
+.card{width:100%;max-width:400px;background:var(--card);border-radius:36px;padding:28px 24px 24px;box-shadow:0 1px 2px rgba(29,40,66,.04),0 12px 32px -8px rgba(29,40,66,.10),0 32px 64px -24px rgba(63,94,251,.14);text-align:center}
+.card[data-warm="1"]{--acc:var(--warm)}
+.status{margin:0 0 18px;font-size:18px;font-weight:700;letter-spacing:-.01em;min-height:1.4em}
+.dial{position:relative;width:min(300px,100%);aspect-ratio:1;margin:0 auto 24px}
+.dial svg{width:100%;height:100%;transform:rotate(-90deg);display:block}
+.track{fill:none;stroke:var(--track);stroke-width:14}
+.bar{fill:none;stroke:var(--acc);stroke-width:14;stroke-linecap:round;transition:stroke-dashoffset .15s linear,stroke .3s}
+.face{position:absolute;inset:26px;border-radius:50%;background:linear-gradient(180deg,#fff,#F7F9FD);box-shadow:inset 0 0 0 1px rgba(29,40,66,.05),0 6px 18px -8px rgba(29,40,66,.18);display:grid;place-content:center;gap:2px}
+.time{font-size:clamp(42px,15vw,60px);font-weight:800;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums;color:var(--ink)}
+.card[data-warm="1"] .time{color:var(--warm)}
+.card[data-warm="1"][data-phase="pre"] .time{font-size:clamp(72px,26vw,104px)}
+.card[data-warm="1"] .time.beat{animation:beat 1s ease-in-out infinite}
+.sub{font-size:14px;color:var(--mute);font-weight:600;min-height:1.3em}
+@keyframes beat{50%{transform:scale(1.07)}}
+.setup{display:none;gap:12px;margin-bottom:20px}
+.card[data-phase="idle"] .setup{display:grid}
+.adjust{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+button{font:inherit;cursor:pointer;border:0;color:var(--ink)}
+button:focus-visible{outline:3px solid var(--pri);outline-offset:3px}
+.step{height:52px;border-radius:18px;background:var(--pri-soft);color:var(--pri);font-weight:800;font-size:17px;transition:transform .12s,background .2s}
+.step:active{transform:scale(.97)}
+.step:disabled{opacity:.4;cursor:default;transform:none}
+.chip{height:38px;padding:0 16px;border-radius:999px;background:#fff;box-shadow:inset 0 0 0 1.5px var(--track);font-weight:700;font-size:14px;color:var(--mute);transition:all .2s}
+.chip[aria-pressed="true"]{background:var(--ink);color:#fff;box-shadow:none}
+.actions{display:grid;gap:10px}
+.main{height:64px;border-radius:22px;background:var(--acc);color:#fff;font-size:20px;font-weight:800;letter-spacing:-.01em;box-shadow:0 10px 24px -10px var(--acc);transition:transform .12s,background .3s}
+.main:active{transform:scale(.98)}
+.ghost{height:48px;border-radius:18px;background:transparent;color:var(--mute);font-weight:700;font-size:16px}
+.ghost[hidden]{display:none}
+.music{margin-top:14px;display:grid;gap:14px}
+.mbtn{height:52px;border-radius:18px;background:#fff;box-shadow:inset 0 0 0 1.5px var(--track);font-weight:800;font-size:16px;color:var(--mute);display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s}
+.mbtn[aria-pressed="true"]{background:var(--pri-soft);color:var(--pri);box-shadow:none}
+.player{display:grid;gap:12px;justify-items:center}
+.player[hidden]{display:none}
+.now{font-size:14px;font-weight:700;color:var(--mute);min-height:1.3em}
+.ctrls{display:flex;align-items:center;justify-content:center;gap:18px}
+.ctl{width:52px;height:52px;border-radius:50%;background:var(--pri-soft);color:var(--pri);display:grid;place-items:center;transition:transform .12s,opacity .2s}
+.ctl.big{width:66px;height:66px;background:var(--pri);color:#fff;box-shadow:0 10px 22px -10px var(--pri)}
+.ctl:active{transform:scale(.94)}
+.ctl:disabled{opacity:.4;cursor:default;transform:none}
+.ctl svg{display:block}
+.ctl svg[hidden]{display:none}
+.card{max-width:420px;--g1:#8CA4FF;--g2:#3F5EFB}
+.card[data-warm="1"]{--g1:#FFB680;--g2:#FF6A48}
+.card[data-phase="done"]{--acc:#1FAE7C;--g1:#7BE3B8;--g2:#1FAE7C}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:999px;background:var(--pri-soft);color:var(--pri);font-size:14px;font-weight:800;letter-spacing:0;margin:0 0 20px;min-height:0}
+.pill i{width:8px;height:8px;border-radius:50%;background:currentColor}
+.card[data-warm="1"] .pill{background:var(--warm-soft);color:var(--warm)}
+.card[data-phase="done"] .pill{background:#E4F7EF;color:#169065}
+.card[data-phase="idle"] .pill,.card[data-paused="1"] .pill{background:#EEF1F7;color:var(--mute)}
+.card[data-phase="run"]:not([data-paused="1"]) .pill i,.card[data-phase="pre"]:not([data-paused="1"]) .pill i{animation:live 1.4s ease-in-out infinite}
+@keyframes live{50%{opacity:.25;transform:scale(.7)}}
+.dial{width:min(320px,100%);container-type:inline-size;margin-bottom:22px}
+.track{stroke-width:12}
+.bar{stroke:url(#g);stroke-width:12;filter:drop-shadow(0 4px 8px rgba(63,94,251,.28))}
+.card[data-warm="1"] .bar{filter:drop-shadow(0 4px 8px rgba(255,106,72,.32))}
+.card[data-phase="done"] .bar{filter:drop-shadow(0 4px 8px rgba(31,174,124,.3))}
+.tk{stroke:#D8DEEB;stroke-width:1.2;stroke-linecap:round}
+.tk.maj{stroke-width:1.9}
+.tk.on{stroke:var(--acc);opacity:.75}
+.knob{fill:#fff;stroke:var(--acc);stroke-width:3.5;transform-origin:100px 100px;transition:transform .15s linear,opacity .2s;filter:drop-shadow(0 2px 4px rgba(29,40,66,.25))}
+.face{inset:15%;background:radial-gradient(circle at 50% 22%,#fff 0%,#F4F7FC 100%);box-shadow:inset 0 0 0 1px rgba(29,40,66,.05),0 2px 3px rgba(29,40,66,.05),0 22px 40px -18px rgba(29,40,66,.28)}
+.time{font-size:clamp(30px,9vw,42px);font-size:14cqw;letter-spacing:-.02em;white-space:nowrap}
+.time i{font-style:normal;opacity:.28}
+.card[data-warm="1"][data-phase="pre"] .time{font-size:clamp(64px,22vw,96px);font-size:34cqw}
+.sub{font-size:13px;font-size:clamp(11px,4.2cqw,14px)}
+.stats{display:none;grid-template-columns:repeat(3,1fr);margin:0 0 20px;padding:12px 0;border-radius:20px;background:#F6F8FC}
+.card[data-phase="run"] .stats{display:grid}
+.stats div{display:grid;gap:3px;padding:0 6px}
+.stats div+div{border-left:1px solid var(--track)}
+.stats span{font-size:12px;font-weight:700;color:var(--mute)}
+.stats b{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main class="card" id="card" data-phase="idle" data-warm="0">
+  <p class="status pill" id="statusP"><i></i><span id="status" aria-live="polite">Süreyi seç</span></p>
+
+  <div class="dial">
+    <svg viewBox="0 0 200 200" aria-hidden="true">
+      <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--g1)"/><stop offset="1" style="stop-color:var(--g2)"/></linearGradient></defs>
+      <g id="ticks"></g>
+      <circle class="track" cx="100" cy="100" r="84"/>
+      <circle class="bar" id="bar" cx="100" cy="100" r="84"/>
+      <circle class="knob" id="knob" cx="184" cy="100" r="8.5"/>
+    </svg>
+    <div class="face">
+      <div class="time" id="time" role="timer">00:15:00</div>
+      <div class="sub" id="sub"></div>
+    </div>
+  </div>
+
+  <div class="stats" id="stats">
+    <div><span>Geçen</span><b id="stEl">00:00:00</b></div>
+    <div><span>Toplam</span><b id="stTot">00:00:00</b></div>
+    <div><span>Bitiş</span><b id="stEnd">--:--</b></div>
+  </div>
+
+  <div class="setup">
+    <div class="adjust">
+      <button class="step" id="minus" aria-label="15 dakika azalt">− 15 dk</button>
+      <button class="step" id="plus" aria-label="15 dakika artır">+ 15 dk</button>
+    </div>
+    <div class="chips" id="chips">
+      <button class="chip" data-m="15" aria-pressed="false">15 dk</button>
+      <button class="chip" data-m="30" aria-pressed="false">30 dk</button>
+      <button class="chip" data-m="45" aria-pressed="false">45 dk</button>
+      <button class="chip" data-m="60" aria-pressed="false">1 saat</button>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="main" id="main">Başlat</button>
+    <button class="ghost" id="reset" hidden>Sıfırla</button>
+  </div>
+
+  <div class="music">
+    <button class="mbtn" id="musicBtn" aria-pressed="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      <span id="musicTxt">Müzik kapalı</span>
+    </button>
+    <div class="player" id="player" hidden>
+      <div class="now" id="now" aria-live="polite"></div>
+      <div class="ctrls">
+        <button class="ctl" id="prev" aria-label="Önceki şarkı"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg></button>
+        <button class="ctl big" id="pp" aria-label="Oynat">
+          <svg id="icPlay" width="30" height="30" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="7 4 20 12 7 20 7 4"/></svg>
+          <svg id="icPause" width="30" height="30" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" hidden><rect x="6" y="4" width="4.5" height="16" rx="1.2"/><rect x="13.5" y="4" width="4.5" height="16" rx="1.2"/></svg>
+        </button>
+        <button class="ctl" id="next" aria-label="Sonraki şarkı"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg></button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+const S1="1.mp3", S2="2.mp3";
+const a1=new Audio(S1), a2=new Audio(S2);
+a1.preload=a2.preload="auto";
+
+const STEP=15*60000, MIN=15*60000, MAX=5*3600000, PRE=5000, LAST=5000;
+const $=id=>document.getElementById(id);
+const card=$("card"), bar=$("bar"), timeEl=$("time");
+const C=2*Math.PI*84, knob=$("knob"), tks=[];
+let lastHtml="", lastN=-1;
+bar.style.strokeDasharray=C;
+for(let i=0;i<60;i++){
+  const l=document.createElementNS("http://www.w3.org/2000/svg","line"), m=i%5===0;
+  l.setAttribute("x1",193);l.setAttribute("x2",m?198.5:196);l.setAttribute("y1",100);l.setAttribute("y2",100);
+  l.setAttribute("transform","rotate("+i*6+" 100 100)");l.setAttribute("class","tk"+(m?" maj":""));
+  $("ticks").appendChild(l);tks.push(l);
+}
+
+let dur=15*60000, phase="idle", paused=false, endAt=0, left=0, lastPlayed=false, timer=null, wl=null;
+
+const pad=n=>String(n).padStart(2,"0");
+function fmt(ms){
+  const s=Math.max(0,Math.ceil(ms/1000));
+  return pad(Math.floor(s/3600))+":"+pad(Math.floor(s%3600/60))+":"+pad(s%60);
+}
+function words(ms){
+  const m=Math.round(ms/60000), h=Math.floor(m/60), r=m%60;
+  return (h?h+" saat":"")+(h&&r?" ":"")+(r?r+" dakika":"");
+}
+function stopAudio(){[a1,a2].forEach(a=>{a.pause();a.currentTime=0})}
+function play(a){const p=a.play();if(p&&p.catch)p.catch(()=>{})}
+async function wake(){try{if(window.plugins&&plugins.insomnia)plugins.insomnia.keepAwake();else wl=await navigator.wakeLock.request("screen")}catch(e){}}
+function unwake(){try{if(window.plugins&&plugins.insomnia)plugins.insomnia.allowSleepAgain();wl&&wl.release();wl=null}catch(e){}}
+
+function start(){
+  stopAudio();
+  phase="pre";paused=false;lastPlayed=false;
+  endAt=Date.now()+PRE;
+  play(a1);wake();
+  clearInterval(timer);timer=setInterval(tick,100);
+  render();tick();
+}
+function tick(){
+  if(paused)return;
+  const now=Date.now();
+  if(phase==="pre"&&endAt-now<=0){phase="run";endAt=now+dur;render()}
+  if(phase==="run"){
+    const r=endAt-now;
+    if(r<=LAST&&!lastPlayed){lastPlayed=true;a1.currentTime=0;play(a1)}
+    if(r<=0){finish();return}
+  }
+  draw();syncMusic();
+}
+function finish(){
+  clearInterval(timer);phase="done";
+  a1.pause();a1.currentTime=0;a2.currentTime=0;play(a2);
+  unwake();render();draw();syncMusic();
+}
+function pause(){
+  paused=true;left=Math.max(0,endAt-Date.now());a1.pause();render();draw();syncMusic();
+}
+function resume(){
+  paused=false;endAt=Date.now()+left;
+  if(a1.currentTime>0&&!a1.ended)play(a1);
+  render();tick();
+}
+function reset(){
+  clearInterval(timer);stopAudio();unwake();
+  phase="idle";paused=false;render();draw();syncMusic();
+}
+
+function remaining(){return paused?left:Math.max(0,endAt-Date.now())}
+
+function draw(){
+  let frac=1,text=fmt(dur),warm=0,beat=false,sub="";
+  if(phase==="idle"){sub=words(dur)}
+  else if(phase==="pre"){
+    const r=remaining();frac=r/PRE;text=Math.max(1,Math.ceil(r/1000));warm=1;beat=!paused;
+  }else if(phase==="run"){
+    const r=remaining();frac=r/dur;text=fmt(r);
+    if(r<=LAST){warm=1;beat=!paused}
+    sub=paused?"Duraklatıldı":"";
+  }else{frac=1;text="Bitti";sub="Harika iş!"}
+  const html=String(text).replace(/:/g,"<i>:</i>");
+  if(html!==lastHtml){timeEl.innerHTML=html;lastHtml=html}
+  timeEl.classList.toggle("beat",beat);
+  $("sub").textContent=sub;
+  const f=Math.max(0,Math.min(1,frac));
+  bar.style.strokeDashoffset=C*(1-f);
+  knob.style.transform="rotate("+f*360+"deg)";
+  knob.style.opacity=(phase==="pre"||phase==="run")&&f>.002?1:0;
+  const n=Math.round(f*60);
+  if(n!==lastN){lastN=n;tks.forEach((t,i)=>t.classList.toggle("on",i<n))}
+  card.dataset.warm=warm;
+  if(phase==="run"){
+    const r=remaining();
+    $("stEl").textContent=fmt(Math.floor((dur-r)/1000)*1000);$("stTot").textContent=fmt(dur);
+    $("stEnd").textContent=paused?"—":new Date(Date.now()+r).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"});
+  }
+}
+function render(){
+  card.dataset.phase=phase;card.dataset.paused=paused?1:0;
+  const st={idle:"Süreyi seç",pre:"Hazır ol!",run:"Süre işliyor",done:"Süre doldu"}[phase];
+  $("status").textContent=paused?"Duraklatıldı":st;
+  $("main").textContent=phase==="idle"?"Başlat":phase==="done"?"Yeniden başla":paused?"Devam et":"Duraklat";
+  $("reset").hidden=phase==="idle"||phase==="done";
+  $("minus").disabled=dur<=MIN;$("plus").disabled=dur>=MAX;
+  document.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed",String(+c.dataset.m*60000===dur)));
+}
+function setDur(ms){dur=Math.max(MIN,Math.min(MAX,ms));render();draw()}
+
+/* ---- Müzik ---- */
+const TRACKS=[3,4,5,6,7,8,9,10,11];
+const music=new Audio();music.preload="auto";music.volume=.8;
+let musicOn=false,userPaused=false,hist=[],pos=-1,bag=[],errs=0;
+
+function pick(){
+  if(!bag.length){
+    bag=TRACKS.slice();
+    for(let i=bag.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[bag[i],bag[j]]=[bag[j],bag[i]]}
+    const last=hist[hist.length-1],e=bag.length-1;
+    if(bag[e]===last&&e>0)[bag[0],bag[e]]=[bag[e],bag[0]];
+  }
+  return bag.pop();
+}
+function loadTrack(){music.src="music/"+hist[pos]+".mp3"}
+function nextTrack(){
+  if(pos<hist.length-1)pos++;else{hist.push(pick());pos=hist.length-1}
+  loadTrack();
+}
+function prevTrack(){
+  if(music.currentTime>3||pos<=0){music.currentTime=0;return}
+  pos--;loadTrack();
+}
+function cue(){
+  if(paused)return false;
+  return phase==="pre"||(phase==="run"&&remaining()<=LAST)||(phase==="done"&&!a2.paused&&!a2.ended);
+}
+function shouldPlay(){return musicOn&&!userPaused&&!cue()}
+function syncMusic(){
+  if(musicOn&&pos<0)nextTrack();
+  if(shouldPlay()){if(music.paused)play(music)}
+  else if(!music.paused)music.pause();
+  updateMusicUI();
+}
+let uiSig="";
+function updateMusicUI(){
+  const playing=shouldPlay(),brk=musicOn&&!userPaused&&cue(),on=playing||brk;
+  const label=pos<0?"":brk?"Sayaç sesi için ara verildi":"Şarkı "+hist[pos];
+  const sig=[musicOn,on,label].join("|");
+  if(sig===uiSig)return;uiSig=sig;
+  $("musicBtn").setAttribute("aria-pressed",String(musicOn));
+  $("musicTxt").textContent=musicOn?"Müzik açık":"Müzik kapalı";
+  $("player").hidden=!musicOn;
+  $("now").textContent=label;
+  $("icPlay").hidden=on;$("icPause").hidden=!on;
+  $("pp").setAttribute("aria-label",on?"Durdur":"Oynat");
+}
+music.onended=()=>{nextTrack();if(shouldPlay())play(music);updateMusicUI()};
+music.onplaying=()=>{errs=0};
+music.onerror=()=>{if(hist.length&&errs++<TRACKS.length){nextTrack();if(shouldPlay())play(music)}};
+a2.onended=()=>syncMusic();
+$("musicBtn").onclick=()=>{musicOn=!musicOn;if(musicOn)userPaused=false;syncMusic()};
+$("pp").onclick=()=>{userPaused=!userPaused;syncMusic()};
+$("next").onclick=()=>{userPaused=false;nextTrack();if(shouldPlay())play(music);syncMusic()};
+$("prev").onclick=()=>{userPaused=false;prevTrack();if(shouldPlay())play(music);syncMusic()};
+
+$("minus").onclick=()=>setDur(dur-STEP);
+$("plus").onclick=()=>setDur(dur+STEP);
+$("chips").onclick=e=>{const c=e.target.closest(".chip");if(c)setDur(+c.dataset.m*60000)};
+$("main").onclick=()=>{
+  if(phase==="idle")start();
+  else if(phase==="done")reset();
+  else paused?resume():pause();
+};
+$("reset").onclick=reset;
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&phase!=="idle"&&phase!=="done"&&!paused){wake();tick()}});
+render();draw();updateMusicUI();
+if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
