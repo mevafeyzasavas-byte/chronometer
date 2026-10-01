@@ -32,7 +32,7 @@ body{margin:0;min-height:100svh;display:grid;place-items:center;padding:max(16px
 .palbtn{display:none;position:absolute;top:0;right:0;z-index:3;width:38px;height:38px;padding:0;border-radius:50%;background:linear-gradient(135deg,var(--th1),var(--pri));box-shadow:inset 0 0 0 3px #fff,0 0 0 1.5px var(--pri-soft),0 6px 14px -6px var(--pri);transition:transform .12s}
 .palbtn:active{transform:scale(.92)}
 .card[data-phase="idle"] .palbtn{display:block}
-.pal{display:none;position:absolute;top:46px;right:0;z-index:10;grid-template-columns:repeat(6,32px);gap:9px;padding:12px;border-radius:20px;background:#fff;box-shadow:0 0 0 1px rgba(29,40,66,.06),0 18px 40px -12px rgba(29,40,66,.28)}
+.pal{display:none;position:absolute;top:46px;right:0;z-index:10;grid-template-rows:repeat(6,32px);grid-auto-flow:column;gap:10px;padding:12px;border-radius:20px;background:#fff;box-shadow:0 0 0 1px rgba(29,40,66,.06),0 18px 40px -12px rgba(29,40,66,.28)}
 .pal.open{display:grid}
 .card:not([data-phase="idle"]) .pal{display:none}
 .sw{width:32px;height:32px;padding:0;border-radius:50%;background:linear-gradient(135deg,var(--a),var(--b));box-shadow:inset 0 0 0 2px #fff;transition:transform .12s,box-shadow .2s}
@@ -55,7 +55,7 @@ button:focus-visible{outline:3px solid var(--pri);outline-offset:3px}
 .music{margin-top:14px;display:grid;gap:14px}
 .player{display:grid;gap:10px;justify-items:center}
 .player[hidden]{display:none}
-.now{width:100%;padding:9px 12px;border-radius:18px;background:var(--pri-soft);color:var(--ink);font-size:14px;font-weight:700;line-height:1.4;text-wrap:balance}
+.now{width:fit-content;max-width:100%;padding:8px 14px;border-radius:18px;background:var(--pri-soft);color:var(--ink);font-size:14px;font-weight:700;line-height:1.4}
 .now:empty{display:none}
 .now.in{animation:qin .45s ease-out}
 @keyframes qin{from{opacity:0;transform:translateY(6px)}}
@@ -75,7 +75,7 @@ button:focus-visible{outline:3px solid var(--pri);outline-offset:3px}
 .card[data-warm="1"] .pill{background:var(--warm-soft);color:var(--warm)}
 .card[data-phase="done"] .pill{background:#E4F7EF;color:#169065}
 .card[data-phase="idle"] .pill,.card[data-paused="1"] .pill{background:#EEF1F7;color:var(--mute)}
-.card[data-phase="idle"] .pill{display:flex;flex:1;justify-content:center;padding:9px 12px;border-radius:18px;background:var(--pri-soft);color:var(--ink);font-size:14px;font-weight:700;line-height:1.4;text-align:center;text-wrap:balance}
+.card[data-phase="idle"] .pill{display:flex;flex:0 1 auto;justify-content:center;padding:8px 14px;border-radius:18px;background:var(--pri-soft);color:var(--ink);font-size:14px;font-weight:700;line-height:1.4;text-align:center}
 .card[data-phase="idle"] .pill i{display:none}
 .card[data-phase="run"]:not([data-paused="1"]) .pill i,.card[data-phase="pre"]:not([data-paused="1"]) .pill i{animation:live 1.4s ease-in-out infinite}
 @keyframes live{50%{opacity:.25;transform:scale(.7)}}
