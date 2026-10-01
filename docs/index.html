@@ -45,8 +45,6 @@ button:focus-visible{outline:3px solid var(--pri);outline-offset:3px}
 .ghost{height:48px;border-radius:18px;background:transparent;color:var(--mute);font-weight:700;font-size:16px}
 .ghost[hidden]{display:none}
 .music{margin-top:14px;display:grid;gap:14px}
-.mbtn{height:52px;border-radius:18px;background:#fff;box-shadow:inset 0 0 0 1.5px var(--track);font-weight:800;font-size:16px;color:var(--mute);display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s}
-.mbtn[aria-pressed="true"]{background:var(--pri-soft);color:var(--pri);box-shadow:none}
 .player{display:grid;gap:12px;justify-items:center}
 .player[hidden]{display:none}
 .now{font-size:14px;font-weight:700;color:var(--mute);min-height:1.3em}
@@ -134,11 +132,7 @@ button:focus-visible{outline:3px solid var(--pri);outline-offset:3px}
   </div>
 
   <div class="music">
-    <button class="mbtn" id="musicBtn" aria-pressed="false">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-      <span id="musicTxt">Müzik kapalı</span>
-    </button>
-    <div class="player" id="player" hidden>
+    <div class="player" id="player">
       <div class="now" id="now" aria-live="polite"></div>
       <div class="ctrls">
         <button class="ctl" id="prev" aria-label="Önceki şarkı"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg></button>
@@ -266,7 +260,7 @@ function setDur(ms){dur=Math.max(MIN,Math.min(MAX,ms));render();draw()}
 /* ---- Müzik ---- */
 const TRACKS=[1,2,3,4,5,6];
 const music=new Audio();music.preload="auto";music.volume=.8;
-let musicOn=false,userPaused=false,hist=[],pos=-1,bag=[],errs=0;
+let musicOn=false,userPaused=false,bg=false,hist=[],pos=-1,bag=[],errs=0;
 
 function pick(){
   if(!bag.length){
@@ -290,7 +284,7 @@ function cue(){
   if(paused)return false;
   return phase==="pre"||(phase==="run"&&remaining()<=LAST)||(phase==="done"&&!a2.paused&&!a2.ended);
 }
-function shouldPlay(){return musicOn&&!userPaused&&!cue()}
+function shouldPlay(){return musicOn&&!userPaused&&!cue()&&!bg&&!document.hidden}
 function syncMusic(){
   if(musicOn&&pos<0)nextTrack();
   if(shouldPlay()){if(music.paused)play(music)}
@@ -299,25 +293,27 @@ function syncMusic(){
 }
 let uiSig="";
 function updateMusicUI(){
-  const playing=shouldPlay(),brk=musicOn&&!userPaused&&cue(),on=playing||brk;
+  const brk=musicOn&&!userPaused&&cue(),on=!music.paused||brk;
   const label=pos<0?"":brk?"Sayaç sesi için ara verildi":"Şarkı "+hist[pos];
-  const sig=[musicOn,on,label].join("|");
+  const sig=[on,label].join("|");
   if(sig===uiSig)return;uiSig=sig;
-  $("musicBtn").setAttribute("aria-pressed",String(musicOn));
-  $("musicTxt").textContent=musicOn?"Müzik açık":"Müzik kapalı";
-  $("player").hidden=!musicOn;
   $("now").textContent=label;
   $("icPlay").hidden=on;$("icPause").hidden=!on;
   $("pp").setAttribute("aria-label",on?"Durdur":"Oynat");
 }
 music.onended=()=>{nextTrack();if(shouldPlay())play(music);updateMusicUI()};
 music.onplaying=()=>{errs=0};
+music.addEventListener("play",updateMusicUI);music.addEventListener("pause",updateMusicUI);
+/* Uygulamadan çıkınca müziği durdur, dönünce devam ettir (sayaç sesleri etkilenmez) */
+const toBg=()=>{bg=true;syncMusic()},toFg=()=>{bg=false;syncMusic()};
+document.addEventListener("visibilitychange",()=>{document.hidden?toBg():toFg()});
+document.addEventListener("pause",toBg);document.addEventListener("resume",toFg);
+window.addEventListener("pagehide",toBg);window.addEventListener("pageshow",toFg);
 music.onerror=()=>{if(hist.length&&errs++<TRACKS.length){nextTrack();if(shouldPlay())play(music)}};
 a2.onended=()=>syncMusic();
-$("musicBtn").onclick=()=>{musicOn=!musicOn;if(musicOn)userPaused=false;syncMusic()};
-$("pp").onclick=()=>{userPaused=!userPaused;syncMusic()};
-$("next").onclick=()=>{userPaused=false;nextTrack();if(shouldPlay())play(music);syncMusic()};
-$("prev").onclick=()=>{userPaused=false;prevTrack();if(shouldPlay())play(music);syncMusic()};
+$("pp").onclick=()=>{if(!musicOn){musicOn=true;userPaused=false}else userPaused=!userPaused;syncMusic()};
+$("next").onclick=()=>{musicOn=true;userPaused=false;nextTrack();if(shouldPlay())play(music);syncMusic()};
+$("prev").onclick=()=>{musicOn=true;userPaused=false;if(pos<0)nextTrack();else prevTrack();if(shouldPlay())play(music);syncMusic()};
 
 $("minus").onclick=()=>setDur(dur-STEP);
 $("plus").onclick=()=>setDur(dur+STEP);
