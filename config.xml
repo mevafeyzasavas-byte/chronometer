@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<widget id="com.meva.surasayaci" version="1.0.0" xmlns="http://www.w3.org/ns/widgets">
+    <name>Süre Sayacı</name>
+    <description>Çocuklar için geri sayım süre sayacı</description>
+    <content src="index.html" />
+    <access origin="*" />
+    <preference name="Orientation" value="portrait" />
+    <preference name="BackgroundColor" value="0xFFF4F6FB" />
+    <preference name="DisallowOverscroll" value="true" />
+    <platform name="android">
+        <preference name="android-minSdkVersion" value="24" />
+        <preference name="AndroidWindowSplashScreenBackground" value="#F4F6FB" />
+    </platform>
+    <plugin name="cordova-plugin-insomnia" spec="^4.3.0" />
+</widget>
