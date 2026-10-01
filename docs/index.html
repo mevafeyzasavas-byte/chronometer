@@ -258,7 +258,7 @@ function render(){
 function setDur(ms){dur=Math.max(MIN,Math.min(MAX,ms));render();draw()}
 
 /* ---- Müzik ---- */
-const TRACKS=[3,4,5,6,7,8,9,10,11];
+const TRACKS=[1,2,3,4,5,6];
 const music=new Audio();music.preload="auto";music.volume=.8;
 let musicOn=false,userPaused=false,hist=[],pos=-1,bag=[],errs=0;
 
