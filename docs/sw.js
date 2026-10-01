@@ -1,4 +1,4 @@
-const CORE="kron-core-v1",MEDIA="kron-media-v1";
+const CORE="kron-core-v2",MEDIA="kron-media-v1";
 const INDEX=new URL("index.html",self.registration.scope).href;
 const inflight={};
 
@@ -26,12 +26,14 @@ self.addEventListener("fetch",e=>{
   else if((r.mode==="navigate"&&u.href.startsWith(self.registration.scope))||u.href===INDEX)e.respondWith(page(e));
 });
 
-// Sayfa: önce önbellek, arkada güncelle (yeni sürüm bir sonraki açılışta görünür)
+// Sayfa: önce internetten (en fazla 3 sn), olmazsa önbellekten — güncellemeler hemen görünür
 async function page(e){
-  const c=await caches.open(CORE),hit=await c.match(INDEX);
-  const up=fetch(INDEX,{cache:"no-cache"}).then(r=>{if(r.ok)c.put(INDEX,r.clone());return r}).catch(()=>null);
-  e.waitUntil(up);
-  return hit||(await up)||new Response("Çevrimdışı",{status:503});
+  const c=await caches.open(CORE);
+  try{
+    const r=await Promise.race([fetch(INDEX,{cache:"no-cache"}),new Promise((_,no)=>setTimeout(no,3000))]);
+    if(r&&r.ok){c.put(INDEX,r.clone());return r}
+  }catch(_){}
+  return (await c.match(INDEX))||new Response("Çevrimdışı",{status:503});
 }
 // Ses: ilk çalışta tamamını indirip saklar, sonra internetsiz çalar
 async function audio(req){
