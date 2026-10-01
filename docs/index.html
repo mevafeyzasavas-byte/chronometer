@@ -80,12 +80,11 @@ button:focus-visible{outline:3px solid var(--pri);outline-offset:3px}
 .time i{font-style:normal;opacity:.28}
 .card[data-warm="1"][data-phase="pre"] .time{font-size:clamp(64px,22vw,96px);font-size:34cqw}
 .sub{font-size:13px;font-size:clamp(11px,4.2cqw,14px)}
-.stats{display:none;grid-template-columns:repeat(3,1fr);margin:0 0 20px;padding:12px 0;border-radius:20px;background:#F6F8FC}
+.stats{display:none;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 20px}
 .card[data-phase="run"] .stats{display:grid}
-.stats div{display:grid;gap:3px;padding:0 6px}
-.stats div+div{border-left:1px solid var(--track)}
-.stats span{font-size:12px;font-weight:700;color:var(--mute)}
-.stats b{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.stats div{display:grid;gap:4px;align-content:center;justify-items:center;height:78px;padding:0 4px;border-radius:22px;background:var(--pri);color:#fff;box-shadow:0 10px 24px -12px var(--pri)}
+.stats span{font-size:13px;font-weight:700;opacity:.85}
+.stats b{font-size:clamp(14px,4.6vw,21px);font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.01em;line-height:1.1}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -109,8 +108,8 @@ button:focus-visible{outline:3px solid var(--pri);outline-offset:3px}
   </div>
 
   <div class="stats" id="stats">
-    <div><span>Geçen</span><b id="stEl">00:00:00</b></div>
     <div><span>Toplam</span><b id="stTot">00:00:00</b></div>
+    <div><span>Geçen</span><b id="stEl">00:00:00</b></div>
     <div><span>Bitiş</span><b id="stEnd">--:--</b></div>
   </div>
 
