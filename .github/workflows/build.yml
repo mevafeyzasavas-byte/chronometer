@@ -30,7 +30,7 @@ jobs:
         run: cordova platform add android@13
 
       - name: Ikonlari uret
-        run: cordova-res android --skip-config --copy
+        run: cordova-res android --skip-config --copy --type icon
 
       - name: APK derle
         run: cordova build android --debug
