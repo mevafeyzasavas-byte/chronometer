@@ -4,6 +4,7 @@
     <description>Çocuklar için geri sayım süre sayacı</description>
     <content src="index.html" />
     <access origin="*" />
+    <allow-navigation href="https://mevafeyzasavas-byte.github.io/*" />
     <preference name="Orientation" value="portrait" />
     <preference name="BackgroundColor" value="0xFFF4F6FB" />
     <preference name="DisallowOverscroll" value="true" />
@@ -11,5 +12,4 @@
         <preference name="android-minSdkVersion" value="24" />
         <preference name="AndroidWindowSplashScreenBackground" value="#F4F6FB" />
     </platform>
-    <plugin name="cordova-plugin-insomnia" spec="^4.3.0" />
 </widget>
