@@ -9,8 +9,7 @@
 <style>
 :root{--bg:#F4F6FB;--card:#FFFFFF;--ink:#1D2842;--mute:#6B7690;--track:#E7EBF4;--pri:#3F5EFB;--pri-soft:#E9EDFF;--warm:#FF7A59;--warm-soft:#FFEEE8;--acc:var(--pri)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%}
-body{margin:0;display:grid;place-items:center;padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));background:radial-gradient(120% 70% at 50% 0%,#fff 0%,var(--bg) 70%);color:var(--ink);font-family:"Nunito",ui-rounded,"SF Pro Rounded","Segoe UI",system-ui,sans-serif}
+body{margin:0;min-height:100svh;display:grid;place-items:center;padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));background:radial-gradient(120% 70% at 50% 0%,#fff 0%,var(--bg) 70%);color:var(--ink);font-family:"Nunito",ui-rounded,"SF Pro Rounded","Segoe UI",system-ui,sans-serif}
 .card{width:100%;max-width:400px;background:var(--card);border-radius:36px;padding:28px 24px 24px;box-shadow:0 1px 2px rgba(29,40,66,.04),0 12px 32px -8px rgba(29,40,66,.10),0 32px 64px -24px rgba(63,94,251,.14);text-align:center}
 .card[data-warm="1"]{--acc:var(--warm)}
 .status{margin:0 0 18px;font-size:18px;font-weight:700;letter-spacing:-.01em;min-height:1.4em}
@@ -54,22 +53,61 @@ button:focus-visible{outline:3px solid var(--pri);outline-offset:3px}
 .ctl:disabled{opacity:.4;cursor:default;transform:none}
 .ctl svg{display:block}
 .ctl svg[hidden]{display:none}
+.card{max-width:420px;--g1:#8CA4FF;--g2:#3F5EFB}
+.card[data-warm="1"]{--g1:#FFB680;--g2:#FF6A48}
+.card[data-phase="done"]{--acc:#1FAE7C;--g1:#7BE3B8;--g2:#1FAE7C}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:999px;background:var(--pri-soft);color:var(--pri);font-size:14px;font-weight:800;letter-spacing:0;margin:0 0 20px;min-height:0}
+.pill i{width:8px;height:8px;border-radius:50%;background:currentColor}
+.card[data-warm="1"] .pill{background:var(--warm-soft);color:var(--warm)}
+.card[data-phase="done"] .pill{background:#E4F7EF;color:#169065}
+.card[data-phase="idle"] .pill,.card[data-paused="1"] .pill{background:#EEF1F7;color:var(--mute)}
+.card[data-phase="run"]:not([data-paused="1"]) .pill i,.card[data-phase="pre"]:not([data-paused="1"]) .pill i{animation:live 1.4s ease-in-out infinite}
+@keyframes live{50%{opacity:.25;transform:scale(.7)}}
+.dial{width:min(320px,100%);container-type:inline-size;margin-bottom:22px}
+.track{stroke-width:12}
+.bar{stroke:url(#g);stroke-width:12;filter:drop-shadow(0 4px 8px rgba(63,94,251,.28))}
+.card[data-warm="1"] .bar{filter:drop-shadow(0 4px 8px rgba(255,106,72,.32))}
+.card[data-phase="done"] .bar{filter:drop-shadow(0 4px 8px rgba(31,174,124,.3))}
+.tk{stroke:#D8DEEB;stroke-width:1.2;stroke-linecap:round}
+.tk.maj{stroke-width:1.9}
+.tk.on{stroke:var(--acc);opacity:.75}
+.knob{fill:#fff;stroke:var(--acc);stroke-width:3.5;transform-origin:100px 100px;transition:transform .15s linear,opacity .2s;filter:drop-shadow(0 2px 4px rgba(29,40,66,.25))}
+.face{inset:15%;background:radial-gradient(circle at 50% 22%,#fff 0%,#F4F7FC 100%);box-shadow:inset 0 0 0 1px rgba(29,40,66,.05),0 2px 3px rgba(29,40,66,.05),0 22px 40px -18px rgba(29,40,66,.28)}
+.time{font-size:clamp(30px,9vw,42px);font-size:14cqw;letter-spacing:-.02em;white-space:nowrap}
+.time i{font-style:normal;opacity:.28}
+.card[data-warm="1"][data-phase="pre"] .time{font-size:clamp(64px,22vw,96px);font-size:34cqw}
+.sub{font-size:13px;font-size:clamp(11px,4.2cqw,14px)}
+.stats{display:none;grid-template-columns:repeat(3,1fr);margin:0 0 20px;padding:12px 0;border-radius:20px;background:#F6F8FC}
+.card[data-phase="run"] .stats{display:grid}
+.stats div{display:grid;gap:3px;padding:0 6px}
+.stats div+div{border-left:1px solid var(--track)}
+.stats span{font-size:12px;font-weight:700;color:var(--mute)}
+.stats b{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 <main class="card" id="card" data-phase="idle" data-warm="0">
-  <p class="status" id="status" aria-live="polite">Süreyi seç</p>
+  <p class="status pill" id="statusP"><i></i><span id="status" aria-live="polite">Süreyi seç</span></p>
 
   <div class="dial">
     <svg viewBox="0 0 200 200" aria-hidden="true">
-      <circle class="track" cx="100" cy="100" r="90"/>
-      <circle class="bar" id="bar" cx="100" cy="100" r="90"/>
+      <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--g1)"/><stop offset="1" style="stop-color:var(--g2)"/></linearGradient></defs>
+      <g id="ticks"></g>
+      <circle class="track" cx="100" cy="100" r="84"/>
+      <circle class="bar" id="bar" cx="100" cy="100" r="84"/>
+      <circle class="knob" id="knob" cx="184" cy="100" r="8.5"/>
     </svg>
     <div class="face">
       <div class="time" id="time" role="timer">00:15:00</div>
       <div class="sub" id="sub"></div>
     </div>
+  </div>
+
+  <div class="stats" id="stats">
+    <div><span>Geçen</span><b id="stEl">00:00:00</b></div>
+    <div><span>Toplam</span><b id="stTot">00:00:00</b></div>
+    <div><span>Bitiş</span><b id="stEnd">--:--</b></div>
   </div>
 
   <div class="setup">
@@ -117,8 +155,15 @@ a1.preload=a2.preload="auto";
 const STEP=15*60000, MIN=15*60000, MAX=5*3600000, PRE=5000, LAST=5000;
 const $=id=>document.getElementById(id);
 const card=$("card"), bar=$("bar"), timeEl=$("time");
-const C=2*Math.PI*90;
+const C=2*Math.PI*84, knob=$("knob"), tks=[];
+let lastHtml="", lastN=-1;
 bar.style.strokeDasharray=C;
+for(let i=0;i<60;i++){
+  const l=document.createElementNS("http://www.w3.org/2000/svg","line"), m=i%5===0;
+  l.setAttribute("x1",193);l.setAttribute("x2",m?198.5:196);l.setAttribute("y1",100);l.setAttribute("y2",100);
+  l.setAttribute("transform","rotate("+i*6+" 100 100)");l.setAttribute("class","tk"+(m?" maj":""));
+  $("ticks").appendChild(l);tks.push(l);
+}
 
 let dur=15*60000, phase="idle", paused=false, endAt=0, left=0, lastPlayed=false, timer=null, wl=null;
 
@@ -137,7 +182,7 @@ async function wake(){try{if(window.plugins&&plugins.insomnia)plugins.insomnia.k
 function unwake(){try{if(window.plugins&&plugins.insomnia)plugins.insomnia.allowSleepAgain();wl&&wl.release();wl=null}catch(e){}}
 
 function start(){
-  stopAudio();music.pause();hist=[];pos=-1;userPaused=false;
+  stopAudio();
   phase="pre";paused=false;lastPlayed=false;
   endAt=Date.now()+PRE;
   play(a1);wake();
@@ -184,15 +229,27 @@ function draw(){
     const r=remaining();frac=r/dur;text=fmt(r);
     if(r<=LAST){warm=1;beat=!paused}
     sub=paused?"Duraklatıldı":"";
-  }else{frac=0;text="00:00:00";sub="Harika iş!"}
-  timeEl.textContent=text;timeEl.classList.toggle("beat",beat);
+  }else{frac=1;text="Bitti";sub="Harika iş!"}
+  const html=String(text).replace(/:/g,"<i>:</i>");
+  if(html!==lastHtml){timeEl.innerHTML=html;lastHtml=html}
+  timeEl.classList.toggle("beat",beat);
   $("sub").textContent=sub;
-  bar.style.strokeDashoffset=C*(1-Math.max(0,Math.min(1,frac)));
+  const f=Math.max(0,Math.min(1,frac));
+  bar.style.strokeDashoffset=C*(1-f);
+  knob.style.transform="rotate("+f*360+"deg)";
+  knob.style.opacity=(phase==="pre"||phase==="run")&&f>.002?1:0;
+  const n=Math.round(f*60);
+  if(n!==lastN){lastN=n;tks.forEach((t,i)=>t.classList.toggle("on",i<n))}
   card.dataset.warm=warm;
+  if(phase==="run"){
+    const r=remaining();
+    $("stEl").textContent=fmt(Math.floor((dur-r)/1000)*1000);$("stTot").textContent=fmt(dur);
+    $("stEnd").textContent=paused?"—":new Date(Date.now()+r).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"});
+  }
 }
 function render(){
-  card.dataset.phase=phase;
-  const st={idle:"Süreyi seç",pre:"Hazır ol!",run:"Kalan süre",done:"Süre doldu"}[phase];
+  card.dataset.phase=phase;card.dataset.paused=paused?1:0;
+  const st={idle:"Süreyi seç",pre:"Hazır ol!",run:"Süre işliyor",done:"Süre doldu"}[phase];
   $("status").textContent=paused?"Duraklatıldı":st;
   $("main").textContent=phase==="idle"?"Başlat":phase==="done"?"Yeniden başla":paused?"Devam et":"Duraklat";
   $("reset").hidden=phase==="idle"||phase==="done";
@@ -224,32 +281,35 @@ function prevTrack(){
   if(music.currentTime>3||pos<=0){music.currentTime=0;return}
   pos--;loadTrack();
 }
-function shouldPlay(){return musicOn&&phase==="run"&&!paused&&!userPaused&&remaining()>LAST}
+function cue(){
+  if(paused)return false;
+  return phase==="pre"||(phase==="run"&&remaining()<=LAST)||(phase==="done"&&!a2.paused&&!a2.ended);
+}
+function shouldPlay(){return musicOn&&!userPaused&&!cue()}
 function syncMusic(){
-  if(shouldPlay()){
-    if(pos<0)nextTrack();
-    if(music.paused)play(music);
-  }else if(!music.paused)music.pause();
+  if(musicOn&&pos<0)nextTrack();
+  if(shouldPlay()){if(music.paused)play(music)}
+  else if(!music.paused)music.pause();
   updateMusicUI();
 }
 let uiSig="";
 function updateMusicUI(){
-  const live=phase==="run"&&!paused&&remaining()>LAST, playing=shouldPlay();
-  const label=phase==="run"&&pos>=0?"Şarkı "+hist[pos]:"Süre başlayınca çalacak";
-  const sig=[musicOn,live,playing,label].join("|");
+  const playing=shouldPlay(),brk=musicOn&&!userPaused&&cue(),on=playing||brk;
+  const label=pos<0?"":brk?"Sayaç sesi için ara verildi":"Şarkı "+hist[pos];
+  const sig=[musicOn,on,label].join("|");
   if(sig===uiSig)return;uiSig=sig;
   $("musicBtn").setAttribute("aria-pressed",String(musicOn));
   $("musicTxt").textContent=musicOn?"Müzik açık":"Müzik kapalı";
   $("player").hidden=!musicOn;
   $("now").textContent=label;
-  ["prev","pp","next"].forEach(id=>$(id).disabled=!live);
-  $("icPlay").hidden=playing;$("icPause").hidden=!playing;
-  $("pp").setAttribute("aria-label",playing?"Durdur":"Oynat");
+  $("icPlay").hidden=on;$("icPause").hidden=!on;
+  $("pp").setAttribute("aria-label",on?"Durdur":"Oynat");
 }
 music.onended=()=>{nextTrack();if(shouldPlay())play(music);updateMusicUI()};
 music.onplaying=()=>{errs=0};
 music.onerror=()=>{if(hist.length&&errs++<TRACKS.length){nextTrack();if(shouldPlay())play(music)}};
-$("musicBtn").onclick=()=>{musicOn=!musicOn;syncMusic()};
+a2.onended=()=>syncMusic();
+$("musicBtn").onclick=()=>{musicOn=!musicOn;if(musicOn)userPaused=false;syncMusic()};
 $("pp").onclick=()=>{userPaused=!userPaused;syncMusic()};
 $("next").onclick=()=>{userPaused=false;nextTrack();if(shouldPlay())play(music);syncMusic()};
 $("prev").onclick=()=>{userPaused=false;prevTrack();if(shouldPlay())play(music);syncMusic()};
