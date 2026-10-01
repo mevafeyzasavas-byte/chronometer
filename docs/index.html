@@ -27,9 +27,15 @@ body{margin:0;min-height:100svh;display:grid;place-items:center;padding:max(16px
 .card[data-phase="idle"] .setup{display:grid}
 .adjust{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-.swatches{display:none;flex-wrap:nowrap;gap:5px;justify-content:center;margin:0 0 16px}
-.card[data-phase="idle"] .swatches{display:flex}
-.sw{flex:1 1 0;min-width:0;max-width:28px;aspect-ratio:1;padding:0;border-radius:50%;background:linear-gradient(135deg,var(--a),var(--b));box-shadow:inset 0 0 0 2px #fff;transition:transform .12s,box-shadow .2s}
+.top{display:flex;align-items:center;justify-content:center;margin:0 0 14px}
+.top .pill{margin:0;min-width:0}
+.palbtn{display:none;position:absolute;top:0;right:0;z-index:3;width:38px;height:38px;padding:0;border-radius:50%;background:linear-gradient(135deg,var(--th1),var(--pri));box-shadow:inset 0 0 0 3px #fff,0 0 0 1.5px var(--pri-soft),0 6px 14px -6px var(--pri);transition:transform .12s}
+.palbtn:active{transform:scale(.92)}
+.card[data-phase="idle"] .palbtn{display:block}
+.pal{display:none;position:absolute;top:46px;right:0;z-index:10;grid-template-columns:repeat(6,32px);gap:9px;padding:12px;border-radius:20px;background:#fff;box-shadow:0 0 0 1px rgba(29,40,66,.06),0 18px 40px -12px rgba(29,40,66,.28)}
+.pal.open{display:grid}
+.card:not([data-phase="idle"]) .pal{display:none}
+.sw{width:32px;height:32px;padding:0;border-radius:50%;background:linear-gradient(135deg,var(--a),var(--b));box-shadow:inset 0 0 0 2px #fff;transition:transform .12s,box-shadow .2s}
 .sw:active{transform:scale(.9)}
 .sw[aria-pressed="true"]{box-shadow:inset 0 0 0 2.5px #fff,0 0 0 2px var(--b)}
 button{font:inherit;cursor:pointer;border:0;color:var(--ink)}
@@ -47,11 +53,10 @@ button:focus-visible{outline:3px solid var(--pri);outline-offset:3px}
 .ghost:active{transform:scale(.98)}
 .ghost[hidden]{display:none}
 .music{margin-top:14px;display:grid;gap:14px}
-.player{display:grid;gap:12px;justify-items:center}
+.player{display:grid;gap:10px;justify-items:center}
 .player[hidden]{display:none}
-.now{width:100%;padding:14px 18px 16px;border-radius:22px;background:var(--pri-soft);color:var(--ink);font-size:15px;font-weight:700;line-height:1.5;text-wrap:balance}
+.now{width:100%;padding:9px 12px;border-radius:18px;background:var(--pri-soft);color:var(--ink);font-size:14px;font-weight:700;line-height:1.4;text-wrap:balance}
 .now:empty{display:none}
-.now::before{content:"\201C";display:block;font-size:40px;line-height:.7;height:20px;font-weight:800;color:var(--pri)}
 .now.in{animation:qin .45s ease-out}
 @keyframes qin{from{opacity:0;transform:translateY(6px)}}
 @media (prefers-reduced-motion:reduce){.now.in{animation:none}}
@@ -70,7 +75,7 @@ button:focus-visible{outline:3px solid var(--pri);outline-offset:3px}
 .card[data-warm="1"] .pill{background:var(--warm-soft);color:var(--warm)}
 .card[data-phase="done"] .pill{background:#E4F7EF;color:#169065}
 .card[data-phase="idle"] .pill,.card[data-paused="1"] .pill{background:#EEF1F7;color:var(--mute)}
-.card[data-phase="idle"] .pill{display:flex;justify-content:center;padding:12px 18px;border-radius:20px;color:var(--ink);font-size:14px;font-weight:700;line-height:1.5;text-align:center;text-wrap:balance}
+.card[data-phase="idle"] .pill{display:flex;flex:1;justify-content:center;padding:9px 12px;border-radius:18px;background:var(--pri-soft);color:var(--ink);font-size:14px;font-weight:700;line-height:1.4;text-align:center;text-wrap:balance}
 .card[data-phase="idle"] .pill i{display:none}
 .card[data-phase="run"]:not([data-paused="1"]) .pill i,.card[data-phase="pre"]:not([data-paused="1"]) .pill i{animation:live 1.4s ease-in-out infinite}
 @keyframes live{50%{opacity:.25;transform:scale(.7)}}
@@ -98,8 +103,9 @@ button:focus-visible{outline:3px solid var(--pri);outline-offset:3px}
 </head>
 <body>
 <main class="card" id="card" data-phase="idle" data-warm="0">
-  <div class="swatches" id="swatches" role="group" aria-label="Renk seç"></div>
-  <p class="status pill" id="statusP"><i></i><span id="status" aria-live="polite">Süreyi seç</span></p>
+  <div class="top">
+    <p class="status pill" id="statusP"><i></i><span id="status" aria-live="polite">Süreyi seç</span></p>
+  </div>
 
   <div class="dial">
     <svg viewBox="0 0 200 200" aria-hidden="true">
@@ -109,7 +115,9 @@ button:focus-visible{outline:3px solid var(--pri);outline-offset:3px}
       <circle class="bar" id="bar" cx="100" cy="100" r="84"/>
       <circle class="knob" id="knob" cx="184" cy="100" r="8.5"/>
     </svg>
-    <div class="face">
+    <button class="palbtn" id="palBtn" aria-label="Renk seç" aria-expanded="false" aria-controls="swatches"></button>
+      <div class="pal" id="swatches" role="group" aria-label="Renk seç"></div>
+      <div class="face">
       <div class="time" id="time" role="timer">00:15:00</div>
       <div class="sub" id="sub"></div>
     </div>
@@ -258,6 +266,7 @@ function render(){
   card.dataset.phase=phase;card.dataset.paused=paused?1:0;
   const st={idle:topQ,pre:"Hazır ol!",run:"Süre işliyor",done:"Süre doldu"}[phase];
   $("status").textContent=paused?"Duraklatıldı":st;
+  if(typeof fitQuotes==="function")fitQuotes();
   $("main").textContent=phase==="idle"?"Başlat":phase==="done"?"Yeniden başla":paused?"Devam et":"Duraklat";
   $("reset").hidden=phase==="idle"||phase==="done";
   $("minus").disabled=dur<=MIN;$("plus").disabled=dur>=MAX;
@@ -328,7 +337,7 @@ function updateMusicUI(){
   const qChanged=!uiSig||uiSig.slice(uiSig.indexOf("|")+1)!==quote;
   uiSig=sig;
   const n=$("now");
-  if(qChanged){n.textContent=quote;n.classList.remove("in");void n.offsetWidth;if(quote)n.classList.add("in")}
+  if(qChanged){n.textContent=quote;n.classList.remove("in");void n.offsetWidth;if(quote)n.classList.add("in");fitLines(n,14,11,2)}
   /* SVG öğelerinde .hidden özelliği yok, o yüzden attribute ile gizliyoruz */
   if(on){$("icPlay").setAttribute("hidden","");$("icPause").removeAttribute("hidden")}
   else{$("icPause").setAttribute("hidden","");$("icPlay").removeAttribute("hidden")}
@@ -358,6 +367,21 @@ $("main").onclick=()=>{
 };
 $("reset").onclick=reset;
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&phase!=="idle"&&phase!=="done"&&!paused){wake();tick()}});
+/* Cümleler en fazla 2 satıra sığsın diye yazıyı gerekirse küçült */
+function fitLines(el,max,min,n){
+  el.style.fontSize=max+"px";
+  for(let f=max;f>min;f-=.5){
+    const cs=getComputedStyle(el),lh=parseFloat(cs.lineHeight),pad=parseFloat(cs.paddingTop)+parseFloat(cs.paddingBottom);
+    if(el.clientHeight-pad<=lh*n+2)break;
+    el.style.fontSize=(f-.5)+"px";
+  }
+}
+function fitQuotes(){
+  const p=$("statusP");
+  if(phase==="idle"&&!paused)fitLines(p,14,11,2);else p.style.fontSize="";
+  if($("now").textContent)fitLines($("now"),14,11,2);
+}
+window.addEventListener("resize",fitQuotes);
 /* ---- Renk temaları ---- */
 const THEMES=[
  {n:"Mavi",pri:"#3F5EFB",soft:"#E9EDFF",g1:"#8CA4FF"},
@@ -388,7 +412,12 @@ function applyTheme(i,save){
   swBox.querySelectorAll(".sw").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.i===(THEMES[i]?i:0))));
   if(save){try{localStorage.setItem("theme",String(i))}catch(e){}}
 }
-swBox.onclick=e=>{const b=e.target.closest(".sw");if(b)applyTheme(+b.dataset.i,true)};
+const palBtn=$("palBtn");
+function palOpen(o){swBox.classList.toggle("open",o);palBtn.setAttribute("aria-expanded",String(o))}
+palBtn.onclick=()=>palOpen(!swBox.classList.contains("open"));
+swBox.onclick=e=>{const b=e.target.closest(".sw");if(b){applyTheme(+b.dataset.i,true);palOpen(false)}};
+document.addEventListener("click",e=>{if(!e.target.closest("#swatches,#palBtn"))palOpen(false)});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")palOpen(false)});
 let savedTheme=0;try{savedTheme=parseInt(localStorage.getItem("theme"),10)||0}catch(e){}
 applyTheme(savedTheme,false);
 
