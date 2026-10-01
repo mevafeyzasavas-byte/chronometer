@@ -39,7 +39,8 @@ button:focus-visible{outline:3px solid var(--pri);outline-offset:3px}
 .step:disabled{opacity:.4;cursor:default;transform:none}
 .chip{height:38px;padding:0 16px;border-radius:999px;background:#fff;box-shadow:inset 0 0 0 1.5px var(--track);font-weight:700;font-size:14px;color:var(--mute);transition:all .2s}
 .chip[aria-pressed="true"]{background:var(--ink);color:#fff;box-shadow:none}
-.actions{display:grid;gap:14px}
+.actions{display:flex;gap:12px}
+.actions>button{flex:1 1 0;min-width:0}
 .main{height:64px;border-radius:22px;background:var(--acc);color:#fff;font-size:20px;font-weight:800;letter-spacing:-.01em;box-shadow:0 10px 24px -10px var(--acc);transition:transform .12s,background .3s}
 .main:active{transform:scale(.98)}
 .ghost{height:64px;border-radius:22px;background:var(--pri);color:#fff;font-size:20px;font-weight:800;letter-spacing:-.01em;box-shadow:0 10px 24px -10px var(--pri);transition:transform .12s}
@@ -48,7 +49,12 @@ button:focus-visible{outline:3px solid var(--pri);outline-offset:3px}
 .music{margin-top:14px;display:grid;gap:14px}
 .player{display:grid;gap:12px;justify-items:center}
 .player[hidden]{display:none}
-.now{font-size:14px;font-weight:700;color:var(--mute);min-height:1.3em}
+.now{width:100%;padding:14px 18px 16px;border-radius:22px;background:var(--pri-soft);color:var(--ink);font-size:15px;font-weight:700;line-height:1.5;text-wrap:balance}
+.now:empty{display:none}
+.now::before{content:"\201C";display:block;font-size:40px;line-height:.7;height:20px;font-weight:800;color:var(--pri)}
+.now.in{animation:qin .45s ease-out}
+@keyframes qin{from{opacity:0;transform:translateY(6px)}}
+@media (prefers-reduced-motion:reduce){.now.in{animation:none}}
 .ctrls{display:flex;align-items:center;justify-content:center;gap:18px}
 .ctl{width:52px;height:52px;border-radius:50%;background:var(--pri-soft);color:var(--pri);display:grid;place-items:center;transition:transform .12s,opacity .2s}
 .ctl.big{width:66px;height:66px;background:var(--pri);color:#fff;box-shadow:0 10px 22px -10px var(--pri)}
@@ -64,6 +70,8 @@ button:focus-visible{outline:3px solid var(--pri);outline-offset:3px}
 .card[data-warm="1"] .pill{background:var(--warm-soft);color:var(--warm)}
 .card[data-phase="done"] .pill{background:#E4F7EF;color:#169065}
 .card[data-phase="idle"] .pill,.card[data-paused="1"] .pill{background:#EEF1F7;color:var(--mute)}
+.card[data-phase="idle"] .pill{display:flex;justify-content:center;padding:12px 18px;border-radius:20px;color:var(--ink);font-size:14px;font-weight:700;line-height:1.5;text-align:center;text-wrap:balance}
+.card[data-phase="idle"] .pill i{display:none}
 .card[data-phase="run"]:not([data-paused="1"]) .pill i,.card[data-phase="pre"]:not([data-paused="1"]) .pill i{animation:live 1.4s ease-in-out infinite}
 @keyframes live{50%{opacity:.25;transform:scale(.7)}}
 .dial{width:min(320px,100%);container-type:inline-size;margin-bottom:22px}
@@ -214,7 +222,7 @@ function resume(){
 }
 function reset(){
   clearInterval(timer);stopAudio();unwake();
-  phase="idle";paused=false;render();draw();syncMusic();
+  phase="idle";paused=false;topQ=pickTop();render();draw();syncMusic();
 }
 
 function remaining(){return paused?left:Math.max(0,endAt-Date.now())}
@@ -248,7 +256,7 @@ function draw(){
 }
 function render(){
   card.dataset.phase=phase;card.dataset.paused=paused?1:0;
-  const st={idle:"Süreyi seç",pre:"Hazır ol!",run:"Süre işliyor",done:"Süre doldu"}[phase];
+  const st={idle:topQ,pre:"Hazır ol!",run:"Süre işliyor",done:"Süre doldu"}[phase];
   $("status").textContent=paused?"Duraklatıldı":st;
   $("main").textContent=phase==="idle"?"Başlat":phase==="done"?"Yeniden başla":paused?"Devam et":"Duraklat";
   $("reset").hidden=phase==="idle"||phase==="done";
@@ -271,7 +279,28 @@ function pick(){
   }
   return bag.pop();
 }
-function loadTrack(){music.src="music/"+hist[pos]+".mp3"}
+const QUOTES=["Zor olan başlamaktır, başladıktan sonra gerisi sadece bir ritim meselesidir.", "Gelecek, bugün ne yaptığına bağlı olarak şekillenir.", "Ertelediğin her dakika, hayallerinden çaldığın bir dakikadır.", "Canın istemediğinde bile o masaya oturmak, sıradan olmakla sıra dışı olmak arasındaki farktır.", "Şimdi zorlanmak, ileride pişman olmaktan çok daha iyidir.", "Yarın 'keşke' dememek için bugün 'iyi ki' diyeceğin şeyler yap.", "Motivasyon sadece başlamanı sağlar, seni hedefe ulaştıracak olan ise disiplindir.", "Büyük başarılar, her gün atılan küçük ve istikrarlı adımların toplamıdır.", "Rüzgarın yönünü değiştiremezsin ama yelkenlerini hedefine göre ayarlayabilirsin.", "Bugün gösterdiğin sabır ve disiplin, yarın en büyük özgürlüğün olacak.", "Zeka seni öne geçirebilir ama seni zirvede tutacak olan tek şey düzenli çalışmaktır.", "Yorulunca bırakma, sadece dinlenmeyi öğren ama asla vazgeçme.", "Hiçbir büyük ödül, kolay bir yolculuğun sonunda verilmemiştir.", "Kaybetmek, sadece denemeyi bıraktığında kesinleşir.", "Bulutların arkasındaki güneşi görmek için önce yağmura katlanmak gerekir.", "Bugün çektiğin zorluklar, yarın sahip olacağın gücün hazırlığıdır.", "Kendi sınırlarını zorlamadıkça, potansiyelinin ne kadar büyük olduğunu asla bilemezsin.", "Gözlerini hedeften ayırma; aradaki engeller sadece bakış açını değiştirdiğinde büyür.", "Başkalarının ne kadar hızlı gittiği önemli değil, senin kendi yolunda ilerliyor olman önemlidir.", "Sessizce çalış, bırak başarın senin yerine konuşsun.", "Bir sene sonra bugün, 'keşke daha erken başlasaydım' demek istemiyorsan hemen şimdi kalemi eline al.", "Hayallerine giden yol, önündeki o masadan ve kitaplardan geçiyor.", "Tüm bahanelerini bir kenara bırak; çünkü hiçbir bahane seni hedefine ulaştırmaz.", "Şu an döktüğün alın teri, gelecekte yaşayacağın rahatlığın teminatıdır.", "Zaman akıp gidiyor; onu izlemek yerine ona yön vermeyi seç.", "Masadaki kitaplar yük değil, seni hayallerine taşıyacak basamaklardır.", "Dışarıdaki gürültüyü kapat ve sadece önündeki sayfaya odaklan.", "Zor olan kısmı ders çalışmak değil, masaya oturma kararsızlığıdır.", "Konfor alanından çıkmadıkça büyüme gerçekleşmez; rahatsızlığı kucakla.", "Bugün canın ders çalışmak istemiyorsa, hedeflerini yeterince hatırlamıyorsun demektir.", "Zayıflık hissi geçicidir, yarım bırakmanın yaratacağı pişmanlık ise kalıcı.", "Başarı, canın istemediğinde bile yapman gerekeni yapma becerisidir.", "Yeteneğin bittiği yerde mücadele başlar; pes etmeyen her zaman kazanır.", "Rakiplerinin uyuduğu veya pes ettiği saatler, senin fark yaratacağın anlardır.", "Mükemmel olmak zorunda değilsin, dün olduğundan daha iyi olman yeterli.", "Her yanlış cevap, doğruya giden yolda elenmiş bir seçenektir.", "Öğrenmek bir yük değil, zihnin kazandığı en büyük güçtür.", "Bugün attığın yarım adımlık ilerleme bile, hiç adım atmamaktan iyidir.", "Büyük hedefler, küçük parçalara bölündüğünde kolaylaşır; sadece sıradaki soruya bak."];
+let qbag=[],quote="";
+/* Üstteki cümle: şarkılardan bağımsız, sayaç her "hazır" ekrana döndüğünde yenilenir */
+let tbag=[],topQ="";
+function pickTop(){
+  if(!tbag.length){
+    tbag=QUOTES.slice();
+    for(let i=tbag.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[tbag[i],tbag[j]]=[tbag[j],tbag[i]]}
+    if(tbag[tbag.length-1]===topQ)tbag.unshift(tbag.pop());
+  }
+  return tbag.pop();
+}
+topQ=pickTop();
+function pickQuote(){
+  if(!qbag.length){
+    qbag=QUOTES.slice();
+    for(let i=qbag.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[qbag[i],qbag[j]]=[qbag[j],qbag[i]]}
+    if(qbag[qbag.length-1]===quote)qbag.unshift(qbag.pop());
+  }
+  return qbag.pop();
+}
+function loadTrack(){music.src="music/"+hist[pos]+".mp3";quote=pickQuote()}
 function nextTrack(){
   if(pos<hist.length-1)pos++;else{hist.push(pick());pos=hist.length-1}
   loadTrack();
@@ -294,10 +323,12 @@ function syncMusic(){
 let uiSig="";
 function updateMusicUI(){
   const brk=musicOn&&!userPaused&&cue(),on=!music.paused||brk;
-  const label=pos<0?"":brk?"Sayaç sesi için ara verildi":"Şarkı "+hist[pos];
-  const sig=[on,label].join("|");
-  if(sig===uiSig)return;uiSig=sig;
-  $("now").textContent=label;
+  const sig=[on,quote].join("|");
+  if(sig===uiSig)return;
+  const qChanged=!uiSig||uiSig.slice(uiSig.indexOf("|")+1)!==quote;
+  uiSig=sig;
+  const n=$("now");
+  if(qChanged){n.textContent=quote;n.classList.remove("in");void n.offsetWidth;if(quote)n.classList.add("in")}
   /* SVG öğelerinde .hidden özelliği yok, o yüzden attribute ile gizliyoruz */
   if(on){$("icPlay").setAttribute("hidden","");$("icPause").removeAttribute("hidden")}
   else{$("icPause").setAttribute("hidden","");$("icPlay").removeAttribute("hidden")}
