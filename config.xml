@@ -11,5 +11,18 @@
     <platform name="android">
         <preference name="android-minSdkVersion" value="24" />
         <preference name="AndroidWindowSplashScreenBackground" value="#F4F6FB" />
+        <!-- Uygulama ikonu: eski telefonlar için düz, yeni telefonlar için adaptif -->
+        <icon density="ldpi" src="resources/android/ldpi-icon.png" />
+        <icon density="mdpi" src="resources/android/mdpi-icon.png" />
+        <icon density="hdpi" src="resources/android/hdpi-icon.png" />
+        <icon density="xhdpi" src="resources/android/xhdpi-icon.png" />
+        <icon density="xxhdpi" src="resources/android/xxhdpi-icon.png" />
+        <icon density="xxxhdpi" src="resources/android/xxxhdpi-icon.png" />
+        <icon density="ldpi" background="resources/android/ldpi-background.png" foreground="resources/android/ldpi-foreground.png" />
+        <icon density="mdpi" background="resources/android/mdpi-background.png" foreground="resources/android/mdpi-foreground.png" />
+        <icon density="hdpi" background="resources/android/hdpi-background.png" foreground="resources/android/hdpi-foreground.png" />
+        <icon density="xhdpi" background="resources/android/xhdpi-background.png" foreground="resources/android/xhdpi-foreground.png" />
+        <icon density="xxhdpi" background="resources/android/xxhdpi-background.png" foreground="resources/android/xxhdpi-foreground.png" />
+        <icon density="xxxhdpi" background="resources/android/xxxhdpi-background.png" foreground="resources/android/xxxhdpi-foreground.png" />
     </platform>
 </widget>
