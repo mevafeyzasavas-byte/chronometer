@@ -41,6 +41,19 @@ button:focus-visible{outline:3px solid var(--pri);outline-offset:3px}
 .main:active{transform:scale(.98)}
 .ghost{height:48px;border-radius:18px;background:transparent;color:var(--mute);font-weight:700;font-size:16px}
 .ghost[hidden]{display:none}
+.music{margin-top:14px;display:grid;gap:14px}
+.mbtn{height:52px;border-radius:18px;background:#fff;box-shadow:inset 0 0 0 1.5px var(--track);font-weight:800;font-size:16px;color:var(--mute);display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s}
+.mbtn[aria-pressed="true"]{background:var(--pri-soft);color:var(--pri);box-shadow:none}
+.player{display:grid;gap:12px;justify-items:center}
+.player[hidden]{display:none}
+.now{font-size:14px;font-weight:700;color:var(--mute);min-height:1.3em}
+.ctrls{display:flex;align-items:center;justify-content:center;gap:18px}
+.ctl{width:52px;height:52px;border-radius:50%;background:var(--pri-soft);color:var(--pri);display:grid;place-items:center;transition:transform .12s,opacity .2s}
+.ctl.big{width:66px;height:66px;background:var(--pri);color:#fff;box-shadow:0 10px 22px -10px var(--pri)}
+.ctl:active{transform:scale(.94)}
+.ctl:disabled{opacity:.4;cursor:default;transform:none}
+.ctl svg{display:block}
+.ctl svg[hidden]{display:none}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -76,6 +89,24 @@ button:focus-visible{outline:3px solid var(--pri);outline-offset:3px}
     <button class="main" id="main">Başlat</button>
     <button class="ghost" id="reset" hidden>Sıfırla</button>
   </div>
+
+  <div class="music">
+    <button class="mbtn" id="musicBtn" aria-pressed="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      <span id="musicTxt">Müzik kapalı</span>
+    </button>
+    <div class="player" id="player" hidden>
+      <div class="now" id="now" aria-live="polite"></div>
+      <div class="ctrls">
+        <button class="ctl" id="prev" aria-label="Önceki şarkı"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg></button>
+        <button class="ctl big" id="pp" aria-label="Oynat">
+          <svg id="icPlay" width="30" height="30" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="7 4 20 12 7 20 7 4"/></svg>
+          <svg id="icPause" width="30" height="30" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" hidden><rect x="6" y="4" width="4.5" height="16" rx="1.2"/><rect x="13.5" y="4" width="4.5" height="16" rx="1.2"/></svg>
+        </button>
+        <button class="ctl" id="next" aria-label="Sonraki şarkı"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg></button>
+      </div>
+    </div>
+  </div>
 </main>
 
 <script>
@@ -106,7 +137,7 @@ async function wake(){try{if(window.plugins&&plugins.insomnia)plugins.insomnia.k
 function unwake(){try{if(window.plugins&&plugins.insomnia)plugins.insomnia.allowSleepAgain();wl&&wl.release();wl=null}catch(e){}}
 
 function start(){
-  stopAudio();
+  stopAudio();music.pause();hist=[];pos=-1;userPaused=false;
   phase="pre";paused=false;lastPlayed=false;
   endAt=Date.now()+PRE;
   play(a1);wake();
@@ -122,15 +153,15 @@ function tick(){
     if(r<=LAST&&!lastPlayed){lastPlayed=true;a1.currentTime=0;play(a1)}
     if(r<=0){finish();return}
   }
-  draw();
+  draw();syncMusic();
 }
 function finish(){
   clearInterval(timer);phase="done";
   a1.pause();a1.currentTime=0;a2.currentTime=0;play(a2);
-  unwake();render();draw();
+  unwake();render();draw();syncMusic();
 }
 function pause(){
-  paused=true;left=Math.max(0,endAt-Date.now());a1.pause();render();draw();
+  paused=true;left=Math.max(0,endAt-Date.now());a1.pause();render();draw();syncMusic();
 }
 function resume(){
   paused=false;endAt=Date.now()+left;
@@ -139,7 +170,7 @@ function resume(){
 }
 function reset(){
   clearInterval(timer);stopAudio();unwake();
-  phase="idle";paused=false;render();draw();
+  phase="idle";paused=false;render();draw();syncMusic();
 }
 
 function remaining(){return paused?left:Math.max(0,endAt-Date.now())}
@@ -170,6 +201,59 @@ function render(){
 }
 function setDur(ms){dur=Math.max(MIN,Math.min(MAX,ms));render();draw()}
 
+/* ---- Müzik ---- */
+const TRACKS=[3,4,5,6,7,8,9,10,11];
+const music=new Audio();music.preload="auto";music.volume=.8;
+let musicOn=false,userPaused=false,hist=[],pos=-1,bag=[],errs=0;
+
+function pick(){
+  if(!bag.length){
+    bag=TRACKS.slice();
+    for(let i=bag.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[bag[i],bag[j]]=[bag[j],bag[i]]}
+    const last=hist[hist.length-1],e=bag.length-1;
+    if(bag[e]===last&&e>0)[bag[0],bag[e]]=[bag[e],bag[0]];
+  }
+  return bag.pop();
+}
+function loadTrack(){music.src="music/"+hist[pos]+".mp3"}
+function nextTrack(){
+  if(pos<hist.length-1)pos++;else{hist.push(pick());pos=hist.length-1}
+  loadTrack();
+}
+function prevTrack(){
+  if(music.currentTime>3||pos<=0){music.currentTime=0;return}
+  pos--;loadTrack();
+}
+function shouldPlay(){return musicOn&&phase==="run"&&!paused&&!userPaused&&remaining()>LAST}
+function syncMusic(){
+  if(shouldPlay()){
+    if(pos<0)nextTrack();
+    if(music.paused)play(music);
+  }else if(!music.paused)music.pause();
+  updateMusicUI();
+}
+let uiSig="";
+function updateMusicUI(){
+  const live=phase==="run"&&!paused&&remaining()>LAST, playing=shouldPlay();
+  const label=phase==="run"&&pos>=0?"Şarkı "+hist[pos]:"Süre başlayınca çalacak";
+  const sig=[musicOn,live,playing,label].join("|");
+  if(sig===uiSig)return;uiSig=sig;
+  $("musicBtn").setAttribute("aria-pressed",String(musicOn));
+  $("musicTxt").textContent=musicOn?"Müzik açık":"Müzik kapalı";
+  $("player").hidden=!musicOn;
+  $("now").textContent=label;
+  ["prev","pp","next"].forEach(id=>$(id).disabled=!live);
+  $("icPlay").hidden=playing;$("icPause").hidden=!playing;
+  $("pp").setAttribute("aria-label",playing?"Durdur":"Oynat");
+}
+music.onended=()=>{nextTrack();if(shouldPlay())play(music);updateMusicUI()};
+music.onplaying=()=>{errs=0};
+music.onerror=()=>{if(hist.length&&errs++<TRACKS.length){nextTrack();if(shouldPlay())play(music)}};
+$("musicBtn").onclick=()=>{musicOn=!musicOn;syncMusic()};
+$("pp").onclick=()=>{userPaused=!userPaused;syncMusic()};
+$("next").onclick=()=>{userPaused=false;nextTrack();if(shouldPlay())play(music);syncMusic()};
+$("prev").onclick=()=>{userPaused=false;prevTrack();if(shouldPlay())play(music);syncMusic()};
+
 $("minus").onclick=()=>setDur(dur-STEP);
 $("plus").onclick=()=>setDur(dur+STEP);
 $("chips").onclick=e=>{const c=e.target.closest(".chip");if(c)setDur(+c.dataset.m*60000)};
@@ -180,7 +264,7 @@ $("main").onclick=()=>{
 };
 $("reset").onclick=reset;
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&phase!=="idle"&&phase!=="done"&&!paused){wake();tick()}});
-render();draw();
+render();draw();updateMusicUI();
 </script>
 </body>
 </html>
