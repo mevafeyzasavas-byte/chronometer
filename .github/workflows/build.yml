@@ -1,0 +1,44 @@
+name: Build APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Cordova kur
+        run: npm install -g cordova cordova-res
+
+      - name: Android platformu ekle
+        run: cordova platform add android@13
+
+      - name: Ikonlari uret
+        run: cordova-res android --skip-config --copy
+
+      - name: APK derle
+        run: cordova build android --debug
+
+      - name: Releases a yukle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp platforms/android/app/build/outputs/apk/debug/app-debug.apk surasayaci.apk
+          gh release delete latest --cleanup-tag -y || true
+          gh release create latest surasayaci.apk --prerelease --title "Süre Sayacı (latest)" --notes "Son derleme: ${GITHUB_SHA::7}"
