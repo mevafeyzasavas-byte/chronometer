@@ -6,10 +6,10 @@
 <meta name="theme-color" content="#F4F6FB">
 <title>Süre Sayacı</title>
 <style>
-:root{--bg:#F4F6FB;--card:#FFFFFF;--ink:#1D2842;--mute:#6B7690;--track:#E7EBF4;--pri:#3F5EFB;--pri-soft:#E9EDFF;--warm:#FF7A59;--warm-soft:#FFEEE8;--acc:var(--pri)}
+:root{--bg:#F4F6FB;--card:#FFFFFF;--ink:#1D2842;--mute:#6B7690;--track:#E7EBF4;--pri:#3F5EFB;--pri-soft:#E9EDFF;--warm:#FF7A59;--warm-soft:#FFEEE8;--acc:var(--pri);--pri-rgb:63,94,251;--th1:#8CA4FF;--th2:#3F5EFB}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;min-height:100svh;display:grid;place-items:center;padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));background:radial-gradient(120% 70% at 50% 0%,#fff 0%,var(--bg) 70%);color:var(--ink);font-family:"Nunito",ui-rounded,"SF Pro Rounded","Segoe UI",system-ui,sans-serif}
-.card{width:100%;max-width:400px;background:var(--card);border-radius:36px;padding:28px 24px 24px;box-shadow:0 1px 2px rgba(29,40,66,.04),0 12px 32px -8px rgba(29,40,66,.10),0 32px 64px -24px rgba(63,94,251,.14);text-align:center}
+.card{width:100%;max-width:400px;background:var(--card);border-radius:36px;padding:28px 24px 24px;box-shadow:0 1px 2px rgba(29,40,66,.04),0 12px 32px -8px rgba(29,40,66,.10),0 32px 64px -24px rgba(var(--pri-rgb),.14);text-align:center}
 .card[data-warm="1"]{--acc:var(--warm)}
 .status{margin:0 0 18px;font-size:18px;font-weight:700;letter-spacing:-.01em;min-height:1.4em}
 .dial{position:relative;width:min(300px,100%);aspect-ratio:1;margin:0 auto 24px}
@@ -27,6 +27,11 @@ body{margin:0;min-height:100svh;display:grid;place-items:center;padding:max(16px
 .card[data-phase="idle"] .setup{display:grid}
 .adjust{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.swatches{display:none;flex-wrap:nowrap;gap:5px;justify-content:center;margin:0 0 16px}
+.card[data-phase="idle"] .swatches{display:flex}
+.sw{flex:1 1 0;min-width:0;max-width:28px;aspect-ratio:1;padding:0;border-radius:50%;background:linear-gradient(135deg,var(--a),var(--b));box-shadow:inset 0 0 0 2px #fff;transition:transform .12s,box-shadow .2s}
+.sw:active{transform:scale(.9)}
+.sw[aria-pressed="true"]{box-shadow:inset 0 0 0 2.5px #fff,0 0 0 2px var(--b)}
 button{font:inherit;cursor:pointer;border:0;color:var(--ink)}
 button:focus-visible{outline:3px solid var(--pri);outline-offset:3px}
 .step{height:52px;border-radius:18px;background:var(--pri-soft);color:var(--pri);font-weight:800;font-size:17px;transition:transform .12s,background .2s}
@@ -52,7 +57,7 @@ button:focus-visible{outline:3px solid var(--pri);outline-offset:3px}
 .ctl:disabled{opacity:.4;cursor:default;transform:none}
 .ctl svg{display:block}
 .ctl svg[hidden]{display:none}
-.card{max-width:420px;--g1:#8CA4FF;--g2:#3F5EFB}
+.card{max-width:420px;--g1:var(--th1);--g2:var(--th2)}
 .card[data-warm="1"]{--g1:#FFB680;--g2:#FF6A48}
 .card[data-phase="done"]{--acc:#1FAE7C;--g1:#7BE3B8;--g2:#1FAE7C}
 .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:999px;background:var(--pri-soft);color:var(--pri);font-size:14px;font-weight:800;letter-spacing:0;margin:0 0 20px;min-height:0}
@@ -64,7 +69,7 @@ button:focus-visible{outline:3px solid var(--pri);outline-offset:3px}
 @keyframes live{50%{opacity:.25;transform:scale(.7)}}
 .dial{width:min(320px,100%);container-type:inline-size;margin-bottom:22px}
 .track{stroke-width:12}
-.bar{stroke:url(#g);stroke-width:12;filter:drop-shadow(0 4px 8px rgba(63,94,251,.28))}
+.bar{stroke:url(#g);stroke-width:12;filter:drop-shadow(0 4px 8px rgba(var(--pri-rgb),.28))}
 .card[data-warm="1"] .bar{filter:drop-shadow(0 4px 8px rgba(255,106,72,.32))}
 .card[data-phase="done"] .bar{filter:drop-shadow(0 4px 8px rgba(31,174,124,.3))}
 .tk{stroke:#D8DEEB;stroke-width:1.2;stroke-linecap:round}
@@ -87,6 +92,7 @@ button:focus-visible{outline:3px solid var(--pri);outline-offset:3px}
 </head>
 <body>
 <main class="card" id="card" data-phase="idle" data-warm="0">
+  <div class="swatches" id="swatches" role="group" aria-label="Renk seç"></div>
   <p class="status pill" id="statusP"><i></i><span id="status" aria-live="polite">Süreyi seç</span></p>
 
   <div class="dial">
@@ -323,6 +329,40 @@ $("main").onclick=()=>{
 };
 $("reset").onclick=reset;
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&phase!=="idle"&&phase!=="done"&&!paused){wake();tick()}});
+/* ---- Renk temaları ---- */
+const THEMES=[
+ {n:"Mavi",pri:"#3F5EFB",soft:"#E9EDFF",g1:"#8CA4FF"},
+ {n:"Gökyüzü",pri:"#3E9BD8",soft:"#E5F3FC",g1:"#8FCBF0"},
+ {n:"Turkuaz",pri:"#25A5B5",soft:"#E0F5F7",g1:"#84D3DC"},
+ {n:"Nane",pri:"#3DB48A",soft:"#E3F6EE",g1:"#8EDDBF"},
+ {n:"Misket",pri:"#7FAE2F",soft:"#EEF6DD",g1:"#BEDD85"},
+ {n:"Bal",pri:"#C98A1B",soft:"#FDF3DF",g1:"#F2CF86"},
+ {n:"Gül kurusu",pri:"#C77D8E",soft:"#F8ECEF",g1:"#E5B3BE"},
+ {n:"Pembe",pri:"#E0679E",soft:"#FDE9F2",g1:"#F6A9CA"},
+ {n:"Şeker",pri:"#D96BC0",soft:"#FBE8F6",g1:"#EEA9DE"},
+ {n:"Lila",pri:"#B069D6",soft:"#F6EAFB",g1:"#D9A7EE"},
+ {n:"Lavanta",pri:"#8B6FE0",soft:"#F0EBFD",g1:"#BFAEF2"},
+ {n:"Bulut",pri:"#6B86A8",soft:"#EAEFF5",g1:"#AFC1D8"}
+];
+const swBox=$("swatches");
+THEMES.forEach((t,i)=>{
+  const b=document.createElement("button");
+  b.className="sw";b.setAttribute("aria-label",t.n);b.setAttribute("aria-pressed","false");
+  b.style.setProperty("--a",t.g1);b.style.setProperty("--b",t.pri);b.dataset.i=i;
+  swBox.appendChild(b);
+});
+function applyTheme(i,save){
+  const t=THEMES[i]||THEMES[0],r=document.documentElement.style;
+  const h=t.pri.slice(1),rgb=[0,2,4].map(k=>parseInt(h.substr(k,2),16)).join(",");
+  r.setProperty("--pri",t.pri);r.setProperty("--pri-soft",t.soft);r.setProperty("--pri-rgb",rgb);
+  r.setProperty("--th1",t.g1);r.setProperty("--th2",t.pri);
+  swBox.querySelectorAll(".sw").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.i===(THEMES[i]?i:0))));
+  if(save){try{localStorage.setItem("theme",String(i))}catch(e){}}
+}
+swBox.onclick=e=>{const b=e.target.closest(".sw");if(b)applyTheme(+b.dataset.i,true)};
+let savedTheme=0;try{savedTheme=parseInt(localStorage.getItem("theme"),10)||0}catch(e){}
+applyTheme(savedTheme,false);
+
 render();draw();updateMusicUI();
 if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
