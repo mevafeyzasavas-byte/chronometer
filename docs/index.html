@@ -95,6 +95,12 @@ button:focus-visible{outline:3px solid var(--pri);outline-offset:3px}
 .stats span{font-size:13px;font-weight:700;opacity:.85}
 .stats b{font-size:clamp(14px,4.6vw,21px);font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.01em;line-height:1.1}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.breaks{margin:0 0 16px}
+.breaks[hidden]{display:none}
+.blabel{margin:0 0 8px;font-size:14px;font-weight:700;color:var(--mute)}
+.main[hidden]{display:none}
+.card[data-brk="1"]:not([data-warm="1"]){--acc:#1FAE7C;--g1:#7BE3B8;--g2:#1FAE7C}
+.card[data-brk="1"]:not([data-warm="1"]) .pill{background:#E4F7EF;color:#169065}
 </style>
 </head>
 <body>
@@ -136,6 +142,15 @@ button:focus-visible{outline:3px solid var(--pri);outline-offset:3px}
     </div>
   </div>
 
+  <div class="breaks" id="breaks" hidden>
+    <p class="blabel">Mola ver</p>
+    <div class="chips" id="breakChips">
+      <button class="chip" data-b="10">10 dk</button>
+      <button class="chip" data-b="15">15 dk</button>
+      <button class="chip" data-b="30">30 dk</button>
+    </div>
+  </div>
+
   <div class="actions">
     <button class="main" id="main">Başlat</button>
     <button class="ghost" id="reset" hidden>Sıfırla</button>
@@ -174,7 +189,7 @@ for(let i=0;i<60;i++){
   $("ticks").appendChild(l);tks.push(l);
 }
 
-let dur=15*60000, phase="idle", paused=false, endAt=0, left=0, lastPlayed=false, timer=null, wl=null;
+let dur=15*60000, phase="idle", paused=false, endAt=0, left=0, lastPlayed=false, timer=null, wl=null, brk=false, studyDur=dur;
 
 const pad=n=>String(n).padStart(2,"0");
 function fmt(ms){
@@ -210,9 +225,20 @@ function tick(){
   draw();syncMusic();
 }
 function finish(){
-  clearInterval(timer);phase="done";
-  a1.pause();a1.currentTime=0;a2.currentTime=0;play(a2);
-  unwake();render();draw();syncMusic();
+  clearInterval(timer);
+  a1.pause();a1.currentTime=0;a2.currentTime=0;play(a2);unwake();
+  if(brk){brk=false;dur=studyDur;phase="idle";topQ=pickTop();}
+  else phase="done";
+  render();draw();syncMusic();
+}
+function startBreak(m){
+  stopAudio();
+  studyDur=dur;brk=true;dur=m*60000;
+  phase="run";paused=false;lastPlayed=false;
+  endAt=Date.now()+dur;
+  wake();
+  clearInterval(timer);timer=setInterval(tick,100);
+  render();tick();
 }
 function pause(){
   paused=true;left=Math.max(0,endAt-Date.now());a1.pause();render();draw();syncMusic();
@@ -224,6 +250,7 @@ function resume(){
 }
 function reset(){
   clearInterval(timer);stopAudio();unwake();
+  if(brk){brk=false;dur=studyDur}
   phase="idle";paused=false;topQ=pickTop();render();draw();syncMusic();
 }
 
@@ -258,11 +285,14 @@ function draw(){
 }
 function render(){
   card.dataset.phase=phase;card.dataset.paused=paused?1:0;
-  const st={idle:topQ,pre:"Hazır ol!",run:"Süre işliyor",done:"Süre doldu"}[phase];
+  const st={idle:topQ,pre:"Hazır ol!",run:brk?"Mola zamanı":"Süre işliyor",done:"Süre doldu"}[phase];
   $("status").textContent=paused?"Duraklatıldı":st;
   if(typeof fitQuotes==="function")fitQuotes();
-  $("main").textContent=phase==="idle"?"Başlat":phase==="done"?"Yeniden başla":paused?"Devam et":"Duraklat";
-  $("reset").hidden=phase==="idle"||phase==="done";
+  $("main").textContent=phase==="idle"?"Başlat":paused?"Devam et":"Duraklat";
+  $("main").hidden=phase==="done";
+  $("reset").hidden=phase==="idle";
+  $("breaks").hidden=phase!=="done";
+  card.dataset.brk=brk?1:0;
   $("minus").disabled=dur<=MIN;$("plus").disabled=dur>=MAX;
   document.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed",String(+c.dataset.m*60000===dur)));
 }
@@ -314,7 +344,7 @@ function prevTrack(){
 }
 function cue(){
   if(paused)return false;
-  return phase==="pre"||(phase==="run"&&remaining()<=LAST)||(phase==="done"&&!a2.paused&&!a2.ended);
+  return phase==="pre"||(phase==="run"&&remaining()<=LAST)||(!a2.paused&&!a2.ended);
 }
 function shouldPlay(){return musicOn&&!userPaused&&!cue()&&!bg&&!document.hidden}
 function syncMusic(){
@@ -360,6 +390,7 @@ $("main").onclick=()=>{
   else paused?resume():pause();
 };
 $("reset").onclick=reset;
+$("breakChips").onclick=e=>{const c=e.target.closest(".chip");if(c)startBreak(+c.dataset.b)};
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&phase!=="idle"&&phase!=="done"&&!paused){wake();tick()}});
 /* Cümleler en fazla 2 satıra sığsın diye yazıyı gerekirse küçült */
 function fitLines(el,max,min,n){
