@@ -101,6 +101,67 @@ button:focus-visible{outline:3px solid var(--pri);outline-offset:3px}
 .main[hidden]{display:none}
 .card[data-brk="1"]:not([data-warm="1"]){--acc:#1FAE7C;--g1:#7BE3B8;--g2:#1FAE7C}
 .card[data-brk="1"]:not([data-warm="1"]) .pill{background:#E4F7EF;color:#169065}
+
+/* ===== Responsive ===== */
+html{-webkit-text-size-adjust:100%}
+body{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+.chips{row-gap:8px}
+
+/* Küçük telefonlar */
+@media (max-width:380px){
+  .card{padding:22px 16px 18px;border-radius:28px}
+  .main,.ghost{height:56px;font-size:18px;border-radius:18px}
+  .step{height:46px;font-size:16px}
+  .chip{height:36px;padding:0 12px;font-size:13px}
+  .stats div{height:68px}
+}
+/* Kısa dikey ekranlar (küçük telefonlar) */
+@media (orientation:portrait) and (max-height:700px){
+  .card{padding-top:18px;padding-bottom:16px}
+  .dial{width:min(230px,100%);margin-bottom:12px}
+  .top{margin-bottom:8px}
+  .setup{gap:8px;margin-bottom:12px}
+  .step{height:42px}
+  .music{margin-top:8px;gap:8px}
+  .ctl{width:44px;height:44px}.ctl.big{width:56px;height:56px}
+}
+/* Tablet */
+@media (min-width:600px) and (min-height:600px){
+  .card{max-width:560px;padding:36px 36px 32px;border-radius:44px}
+  .dial{width:min(400px,100%);margin-bottom:28px}
+  .pill,.card[data-phase="idle"] .pill{font-size:17px}
+  .sub{font-size:16px}
+  .stats div{height:92px}
+  .stats span{font-size:15px}
+  .stats b{font-size:clamp(18px,3.4vw,26px)}
+  .step{height:60px;font-size:19px}
+  .chip{height:44px;padding:0 20px;font-size:16px}
+  .blabel{font-size:16px}
+  .main,.ghost{height:74px;font-size:23px;border-radius:26px}
+  .now{font-size:16px!important}
+  .ctl{width:60px;height:60px}.ctl.big{width:76px;height:76px}
+}
+/* Büyük tablet / yatay tablet */
+@media (min-width:900px) and (min-height:700px){
+  .card{max-width:620px}
+}
+/* Yatay telefon / alçak yatay ekran: sol saat, sağ kontroller */
+@media (orientation:landscape) and (max-height:620px){
+  body{align-items:start}
+  .card{max-width:900px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:28px;align-content:center;align-items:center;padding:20px 28px;border-radius:32px}
+  .card>*{grid-column:2}
+  .card>.dial{grid-column:1;grid-row:1/span 8;width:min(100%,calc(100svh - 80px));margin:0 auto}
+  .card>.top{margin-bottom:10px}
+  .setup,.stats,.breaks{margin-bottom:12px}
+  .card{padding:14px 24px}
+  .step{height:42px}
+  .chip{height:34px}
+  .main,.ghost{height:50px;font-size:18px}
+  .setup{gap:8px}
+  .music{margin-top:6px}
+  .card>.dial{width:min(100%,calc(100svh - 64px))}
+  .ctl{width:44px;height:44px}.ctl.big{width:56px;height:56px}
+}
 </style>
 </head>
 <body>
@@ -135,6 +196,7 @@ button:focus-visible{outline:3px solid var(--pri);outline-offset:3px}
       <button class="step" id="plus" aria-label="15 dakika artır">+ 15 dk</button>
     </div>
     <div class="chips" id="chips">
+      <button class="chip" data-m="1" aria-pressed="false">1 dk (test)</button>
       <button class="chip" data-m="15" aria-pressed="false">15 dk</button>
       <button class="chip" data-m="30" aria-pressed="false">30 dk</button>
       <button class="chip" data-m="45" aria-pressed="false">45 dk</button>
@@ -145,6 +207,7 @@ button:focus-visible{outline:3px solid var(--pri);outline-offset:3px}
   <div class="breaks" id="breaks" hidden>
     <p class="blabel">Mola ver</p>
     <div class="chips" id="breakChips">
+      <button class="chip" data-b="1">1 dk (test)</button>
       <button class="chip" data-b="10">10 dk</button>
       <button class="chip" data-b="15">15 dk</button>
       <button class="chip" data-b="30">30 dk</button>
@@ -176,7 +239,7 @@ const S1="1.mp3", S2="2.mp3";
 const a1=new Audio(S1), a2=new Audio(S2);
 a1.preload=a2.preload="auto";
 
-const STEP=15*60000, MIN=15*60000, MAX=5*3600000, PRE=5000, LAST=5000;
+const STEP=15*60000, MIN=60000, MAX=5*3600000, PRE=5000, LAST=5000;
 const $=id=>document.getElementById(id);
 const card=$("card"), bar=$("bar"), timeEl=$("time");
 const C=2*Math.PI*84, knob=$("knob"), tks=[];
@@ -381,8 +444,8 @@ $("pp").onclick=()=>{if(!musicOn){musicOn=true;userPaused=false}else userPaused=
 $("next").onclick=()=>{musicOn=true;userPaused=false;nextTrack();if(shouldPlay())play(music);syncMusic()};
 $("prev").onclick=()=>{musicOn=true;userPaused=false;if(pos<0)nextTrack();else prevTrack();if(shouldPlay())play(music);syncMusic()};
 
-$("minus").onclick=()=>setDur(dur-STEP);
-$("plus").onclick=()=>setDur(dur+STEP);
+$("minus").onclick=()=>setDur(dur<=STEP?MIN:dur-STEP);
+$("plus").onclick=()=>setDur(dur<STEP?STEP:dur+STEP);
 $("chips").onclick=e=>{const c=e.target.closest(".chip");if(c)setDur(+c.dataset.m*60000)};
 $("main").onclick=()=>{
   if(phase==="idle")start();
